@@ -409,7 +409,7 @@ function renderChecklist(){
   const container=document.getElementById('checklistContainer');
   container.innerHTML='';
   const tLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
-  document.getElementById('checkTitle').textContent=`${state.shift}조 ${tLabel}번 점검 체크리스트`;
+  document.getElementById('checkTitle').textContent=`${state.shift}조 ${tLabel} 점검 체크리스트`;
 
   const commons=CHECKLIST.filter(i=>i.target==='common');
   const secC=document.createElement('div');
@@ -420,7 +420,7 @@ function renderChecklist(){
   const turns=CHECKLIST.filter(i=>i.target===state.turn);
   if(turns.length>0){
     const secT=document.createElement('div');
-    secT.innerHTML=`<div class="sec-title">${tLabel}번 전용 항목</div>`;
+    secT.innerHTML=`<div class="sec-title">${tLabel} 전용 항목</div>`;
     turns.forEach(item=>secT.appendChild(makeItem(item)));
     container.appendChild(secT);
   }
@@ -494,7 +494,7 @@ function renderSummary(){
   document.getElementById('summaryContent').innerHTML=`
     <div class="sec-title">점검 결과 요약</div>
     <div class="sum-row"><span class="sum-label">점검 일시</span><span class="sum-value">${state.timestamp}</span></div>
-    <div class="sum-row"><span class="sum-label">근무조 / 교대</span><span class="sum-value">${state.shift}조 / ${tLabel}번</span></div>
+    <div class="sum-row"><span class="sum-label">근무조 / 교대</span><span class="sum-value">${state.shift}조 / ${tLabel}</span></div>
     <div class="sum-row"><span class="sum-label">총 점검 항목</span><span class="sum-value">${items.length}개</span></div>
     <div class="stat-chips">
       <div class="stat-chip chip-ok">○ 양호 ${okC}</div>
@@ -565,7 +565,7 @@ async function submitResult(){
 === 관리감독자 업무 점검 결과 ===
 ▶ 점검 일시 : ${state.timestamp}
 ▶ 근무조    : ${state.shift}조
-▶ 교대 구분 : ${tLabel}번
+▶ 교대 구분 : ${tLabel}
 --- 점검 결과 ---
 ○ 양호    : ${okC}건
 △ 보완    : ${partC}건
@@ -580,9 +580,10 @@ ${state.memo||'없음'}
     timestamp:state.timestamp, shift:state.shift, turn:tLabel,
     gps:`${state.gpsLat}, ${state.gpsLng}`, accuracy:state.gpsAccuracy||'N/A',
     ok:okC, partial:partC, ng:ngC, na:naC,
+    checks:state.checks,
     ngDetail:ngDetail||'없음', memo:state.memo||'없음',
     toEmails:emails.join(','),
-    subject:`[안전패트롤] ${state.shift}조 ${tLabel}번 점검결과 - ${state.timestamp}`,
+    subject:`[안전패트롤] ${state.shift}조 ${tLabel} 점검결과 - ${state.timestamp}`,
     emailBody:emailBody,
   };
 
