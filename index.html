@@ -3,425 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>안전 패트롤 점검 시스템</title>
+<title>관리감독자 업무 점검</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
-
   :root {
-    --bg: #0a0c0f;
-    --surface: #111418;
-    --surface2: #181d24;
-    --surface3: #1e2530;
-    --accent: #f5a623;
-    --accent2: #e8431a;
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #f59e0b;
-    --text: #e8edf2;
-    --text2: #8fa0b0;
-    --border: #2a3340;
-    --glow: rgba(245,166,35,0.15);
+    --bg:#0a0c0f; --surface:#111418; --surface2:#181d24; --surface3:#1e2530;
+    --accent:#f5a623; --accent2:#e8431a; --green:#22c55e; --red:#ef4444;
+    --yellow:#f59e0b; --blue:#3b82f6; --text:#e8edf2; --text2:#8fa0b0;
+    --border:#2a3340; --glow:rgba(245,166,35,0.15);
   }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* HEADER */
+  .header{background:linear-gradient(135deg,#0f1318,#161c26);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+  .header-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .header-title{font-size:15px;font-weight:700;color:var(--text);}
+  .header-sub{font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;}
+  .shift-badge{margin-left:auto;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans KR', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  /* STEPS */
+  .steps{display:flex;gap:4px;padding:16px 18px 0;}
+  .step-dot{flex:1;height:4px;background:var(--border);border-radius:2px;transition:background 0.3s;}
+  .step-dot.active{background:var(--accent);}
+  .step-dot.done{background:var(--green);}
 
-  /* ── HEADER ── */
-  .header {
-    background: linear-gradient(135deg, #0f1318 0%, #161c26 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  .header-title { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-  .header-sub { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
-  .shift-badge {
-    margin-left: auto;
-    background: var(--surface3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    font-family: 'JetBrains Mono', monospace;
-    white-space: nowrap;
-  }
+  /* MAIN */
+  .main{padding:14px 18px 40px;max-width:640px;margin:0 auto;}
 
-  /* ── MAIN ── */
-  .main { padding: 20px; max-width: 600px; margin: 0 auto; }
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;animation:fadeUp 0.3s ease;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .card-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;font-family:'JetBrains Mono',monospace;}
+  .card-title{font-size:17px;font-weight:700;margin-bottom:14px;}
 
-  /* ── STEP INDICATOR ── */
-  .steps {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 24px;
-  }
-  .step-dot {
-    flex: 1; height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    transition: background 0.3s;
-  }
-  .step-dot.active { background: var(--accent); }
-  .step-dot.done { background: var(--green); }
+  /* OPTION BUTTONS */
+  .option-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .option-grid.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .option-btn{background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.2s;font-size:14px;font-weight:700;color:var(--text2);}
+  .option-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .option-btn.selected{background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(232,67,26,0.1));border-color:var(--accent);color:var(--accent);box-shadow:0 0 16px var(--glow);}
+  .option-btn .sub{font-size:9px;font-weight:400;color:var(--text2);margin-top:2px;}
+  .option-btn.selected .sub{color:var(--accent);opacity:0.7;}
 
-  /* ── CARD ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    animation: fadeUp 0.3s ease;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .card-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .card-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: var(--text);
-  }
+  /* GPS BOX */
+  .gps-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .gps-dot{width:11px;height:11px;border-radius:50%;background:var(--text2);flex-shrink:0;}
+  .gps-dot.active{background:var(--green);box-shadow:0 0 8px var(--green);animation:pdot 2s infinite;}
+  .gps-dot.error{background:var(--red);}
+  @keyframes pdot{0%,100%{box-shadow:0 0 8px var(--green)}50%{box-shadow:0 0 18px var(--green)}}
+  .gps-text{font-size:12px;color:var(--text2);}
+  .gps-coords{font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:2px;}
 
-  /* ── RADIO / SELECT BUTTONS ── */
-  .option-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .option-grid.cols4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .option-btn {
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 10px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text2);
-    font-family: 'Noto Sans KR', sans-serif;
-  }
-  .option-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-  .option-btn.selected {
-    background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(232,67,26,0.1));
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: 0 0 20px var(--glow);
-  }
-  .option-btn .sub { font-size: 10px; font-weight: 400; color: var(--text2); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
-  .option-btn.selected .sub { color: var(--accent); opacity: 0.7; }
+  /* SECTION TITLE */
+  .sec-title{font-size:12px;font-weight:700;color:var(--accent);margin:18px 0 8px;display:flex;align-items:center;gap:6px;}
+  .sec-title::before{content:'';display:block;width:3px;height:13px;background:var(--accent);border-radius:2px;}
 
-  /* ── GPS STATUS ── */
-  .gps-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .gps-dot {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: var(--text2);
-    flex-shrink: 0;
-    position: relative;
-  }
-  .gps-dot.active {
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse-dot 2s infinite;
-  }
-  .gps-dot.error { background: var(--red); }
-  @keyframes pulse-dot {
-    0%,100% { box-shadow: 0 0 8px var(--green); }
-    50% { box-shadow: 0 0 20px var(--green); }
-  }
-  .gps-text { font-size: 13px; color: var(--text2); }
-  .gps-coords { font-size: 11px; color: var(--green); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+  /* CHECK ITEM */
+  .check-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;transition:all 0.15s;}
+  .check-item-text{flex:1;font-size:12px;line-height:1.5;color:var(--text);}
+  .check-item-text .tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:4px;margin-right:4px;font-weight:700;font-family:'JetBrains Mono',monospace;vertical-align:middle;}
+  .tag-common{background:rgba(59,130,246,0.2);color:#60a5fa;}
+  .tag-morning{background:rgba(245,166,35,0.2);color:#fbbf24;}
+  .tag-afternoon{background:rgba(34,197,94,0.2);color:#4ade80;}
+  .tag-night{background:rgba(139,92,246,0.2);color:#a78bfa;}
+  .check-btns{display:flex;gap:5px;flex-shrink:0;}
+  .cBtn{width:36px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all 0.15s;color:var(--text2);}
+  .cBtn:hover{transform:scale(1.1);}
+  .cBtn.ok.active{background:rgba(34,197,94,0.2);border-color:var(--green);color:var(--green);}
+  .cBtn.partial.active{background:rgba(245,158,11,0.2);border-color:var(--yellow);color:var(--yellow);}
+  .cBtn.ng.active{background:rgba(239,68,68,0.2);border-color:var(--red);color:var(--red);}
+  .cBtn.na.active{background:rgba(100,116,139,0.2);border-color:#64748b;color:#94a3b8;}
 
-  /* ── CHECKLIST ── */
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-    margin: 20px 0 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-title::before {
-    content: '';
-    display: block;
-    width: 4px; height: 14px;
-    background: var(--accent);
-    border-radius: 2px;
-  }
-  .check-item {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    transition: all 0.2s;
-  }
-  .check-item:hover { border-color: var(--border); background: var(--surface3); }
-  .check-item-text { flex: 1; font-size: 13px; line-height: 1.5; color: var(--text); }
-  .check-item-text .law-ref { font-size: 10px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-  .check-btns { display: flex; gap: 6px; flex-shrink: 0; }
-  .cBtn {
-    width: 38px; height: 32px;
-    border-radius: 8px;
-    border: 1.5px solid var(--border);
-    background: transparent;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-    color: var(--text2);
-  }
-  .cBtn:hover { transform: scale(1.1); }
-  .cBtn.ok.active { background: rgba(34,197,94,0.2); border-color: var(--green); color: var(--green); }
-  .cBtn.ng.active { background: rgba(239,68,68,0.2); border-color: var(--red); color: var(--red); }
-  .cBtn.na.active { background: rgba(245,158,11,0.2); border-color: var(--yellow); color: var(--yellow); }
+  /* PROGRESS */
+  .prog-text{font-size:10px;color:var(--text2);margin-bottom:5px;font-family:'JetBrains Mono',monospace;}
+  .prog-wrap{background:var(--surface2);border-radius:3px;height:5px;margin-bottom:18px;overflow:hidden;}
+  .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 0.4s;}
 
-  /* ── PROGRESS BAR ── */
-  .progress-bar-wrap {
-    background: var(--surface2);
-    border-radius: 4px;
-    height: 6px;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 4px;
-    transition: width 0.4s ease;
-  }
-  .progress-text { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  /* TEXTAREA */
+  .ta{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;resize:vertical;min-height:80px;outline:none;transition:border-color 0.2s;}
+  .ta:focus{border-color:var(--accent);}
+  .ta-label{font-size:12px;color:var(--text2);margin-bottom:6px;margin-top:14px;}
 
-  /* ── MEMO ── */
-  .memo-area {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
-    color: var(--text);
-    font-size: 13px;
-    font-family: 'Noto Sans KR', sans-serif;
-    resize: vertical;
-    min-height: 80px;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-top: 8px;
-  }
-  .memo-area:focus { border-color: var(--accent); }
+  /* NG TABLE */
+  .ng-row{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:6px;}
+  .ng-item-name{font-size:12px;color:var(--text);margin-bottom:8px;font-weight:500;}
+  .ng-row .ta{min-height:56px;font-size:12px;}
 
-  /* ── BUTTON ── */
-  .btn-primary {
-    width: 100%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none;
-    border-radius: 14px;
-    padding: 16px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
-    transition: all 0.2s;
-    letter-spacing: -0.3px;
-    margin-top: 8px;
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,166,35,0.3); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  /* BUTTONS */
+  .btn-primary{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;padding:15px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;margin-top:8px;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,166,35,0.3);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text2);font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.2s;margin-top:6px;width:100%;}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
 
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 20px;
-    color: var(--text2);
-    font-size: 13px;
-    cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
-    transition: all 0.2s;
-    margin-top: 8px;
-    width: 100%;
-  }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  /* SUMMARY */
+  .sum-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .sum-row:last-child{border-bottom:none;}
+  .sum-label{color:var(--text2);}
+  .sum-value{font-weight:600;color:var(--text);}
+  .stat-chips{display:flex;gap:7px;justify-content:center;margin:12px 0;}
+  .stat-chip{padding:5px 12px;border-radius:16px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .chip-ok{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+  .chip-partial{background:rgba(245,158,11,0.15);color:var(--yellow);border:1px solid rgba(245,158,11,0.3);}
+  .chip-ng{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+  .chip-na{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3);}
 
-  /* ── RESULT SCREEN ── */
-  .result-icon {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: rgba(34,197,94,0.15);
-    border: 2px solid var(--green);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
-    margin: 0 auto 20px;
-    animation: scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes scaleIn {
-    from { transform: scale(0); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
-  }
-  .result-title { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  .result-sub { text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+  /* WARN/INFO BOX */
+  .warn-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:9px;padding:11px 14px;font-size:12px;color:#fca5a5;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
+  .info-box{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.3);border-radius:9px;padding:11px 14px;font-size:12px;color:#fcd34d;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
 
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .summary-row:last-child { border-bottom: none; }
-  .summary-label { color: var(--text2); }
-  .summary-value { font-weight: 600; color: var(--text); }
+  /* RESULT */
+  .result-icon{width:68px;height:68px;border-radius:50%;background:rgba(34,197,94,0.15);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 18px;animation:scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+  @keyframes scaleIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
 
-  .stat-chips { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
-  .stat-chip {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .chip-ok { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
-  .chip-ng { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
-  .chip-na { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+  /* OVERLAY */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+  .overlay.show{display:flex;}
+  .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* ── LOADING OVERLAY ── */
-  .overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.8);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .overlay.show { display: flex; }
-  .spinner {
-    width: 48px; height: 48px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .overlay-text { font-size: 14px; color: var(--text2); }
+  .step-screen{display:none;}
+  .step-screen.active{display:block;}
 
-  /* ── HIDDEN STEPS ── */
-  .step-screen { display: none; }
-  .step-screen.active { display: block; }
-
-  /* ── WARNING BOX ── */
-  .warn-box {
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: #fca5a5;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .info-box {
-    background: rgba(245,166,35,0.08);
-    border: 1px solid rgba(245,166,35,0.3);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: #fcd34d;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
+  /* LEGEND */
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+  .leg-dot{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-icon">🛡️</div>
   <div>
-    <div class="header-title">안전 패트롤 점검</div>
+    <div class="header-title">관리감독자 업무 점검</div>
     <div class="header-sub">HANKOOK TIRE · 정련공정</div>
   </div>
-  <div class="shift-badge" id="currentShiftBadge">--조 --번</div>
+  <div class="shift-badge" id="currentShiftBadge">--조</div>
 </div>
 
-<!-- LOADING OVERLAY -->
 <div class="overlay" id="overlay">
   <div class="spinner"></div>
-  <div class="overlay-text" id="overlayText">GPS 위치 확인 중...</div>
+  <div style="font-size:13px;color:var(--text2);" id="overlayText">처리 중...</div>
+</div>
+
+<div class="steps" id="stepDots">
+  <div class="step-dot" id="dot0"></div>
+  <div class="step-dot" id="dot1"></div>
+  <div class="step-dot" id="dot2"></div>
+  <div class="step-dot" id="dot3"></div>
 </div>
 
 <div class="main">
-  <!-- STEP DOTS -->
-  <div class="steps">
-    <div class="step-dot" id="dot0"></div>
-    <div class="step-dot" id="dot1"></div>
-    <div class="step-dot" id="dot2"></div>
-    <div class="step-dot" id="dot3"></div>
-  </div>
 
-  <!-- ── STEP 0: GPS + 조 선택 ── -->
+  <!-- STEP 0: GPS + 조 선택 -->
   <div class="step-screen active" id="step0">
     <div class="card">
       <div class="card-label">STEP 01 / 04</div>
-      <div class="card-title">근무조 및 GPS 확인</div>
+      <div class="card-title">GPS 확인 및 근무조 선택</div>
 
-      <div class="gps-box" id="gpsBox">
+      <div class="gps-box">
         <div class="gps-dot" id="gpsDot"></div>
         <div>
           <div class="gps-text" id="gpsText">GPS 위치 확인 중...</div>
@@ -429,7 +171,7 @@
         </div>
       </div>
 
-      <div class="card-label" style="margin-top:4px">근무 조 선택</div>
+      <div class="card-label">근무 조 선택</div>
       <div class="option-grid cols4" id="shiftGrid">
         <div class="option-btn" onclick="selectShift('A')">A조</div>
         <div class="option-btn" onclick="selectShift('B')">B조</div>
@@ -437,555 +179,440 @@
         <div class="option-btn" onclick="selectShift('D')">D조</div>
       </div>
 
-      <div id="shiftInfo" style="margin-top:12px; display:none;">
-        <div class="info-box">
-          <span>ℹ️</span>
-          <span id="shiftInfoText"></span>
-        </div>
+      <div id="shiftInfo" style="display:none;margin-top:10px;">
+        <div class="info-box"><span>ℹ️</span><span id="shiftInfoText"></span></div>
       </div>
 
-      <button class="btn-primary" id="step0Next" onclick="goStep1()" disabled>다음 단계 →</button>
+      <button class="btn-primary" id="step0Next" onclick="goStep(1)" disabled>다음 →</button>
     </div>
   </div>
 
-  <!-- ── STEP 1: 위치 선택 ── -->
+  <!-- STEP 1: 근무 교대 선택 -->
   <div class="step-screen" id="step1">
     <div class="card">
       <div class="card-label">STEP 02 / 04</div>
-      <div class="card-title">점검 위치 선택</div>
-      <div class="option-grid" id="locationGrid">
-        <div class="option-btn" onclick="selectLocation('1층')">
-          1층
-          <div class="sub">원료 투입 / 계량</div>
+      <div class="card-title">근무 교대 선택</div>
+      <div class="option-grid" style="grid-template-columns:1fr 1fr 1fr;" id="turnGrid">
+        <div class="option-btn" onclick="selectTurn('전')">
+          🌅 오전
+          <div class="sub">전 (前)</div>
         </div>
-        <div class="option-btn" onclick="selectLocation('중2층')">
-          중2층
-          <div class="sub">믹서 작업 구역</div>
+        <div class="option-btn" onclick="selectTurn('후')">
+          🌇 오후
+          <div class="sub">후 (後)</div>
         </div>
-        <div class="option-btn" onclick="selectLocation('2층')">
-          2층
-          <div class="sub">배출 / 이송</div>
-        </div>
-        <div class="option-btn" onclick="selectLocation('3층')">
-          3층
-          <div class="sub">설비 상부</div>
+        <div class="option-btn" onclick="selectTurn('야')">
+          🌙 야간
+          <div class="sub">야 (夜)</div>
         </div>
       </div>
       <button class="btn-ghost" onclick="goStep(0)">← 이전</button>
-      <button class="btn-primary" id="step1Next" onclick="goStep(2)" disabled>다음 단계 →</button>
+      <button class="btn-primary" id="step1Next" onclick="goStep(2)" disabled>다음 →</button>
     </div>
   </div>
 
-  <!-- ── STEP 2: 체크리스트 ── -->
+  <!-- STEP 2: 체크리스트 -->
   <div class="step-screen" id="step2">
     <div class="card">
       <div class="card-label">STEP 03 / 04</div>
-      <div class="card-title" id="checklistTitle">안전 점검 체크리스트</div>
+      <div class="card-title" id="checkTitle">점검 체크리스트</div>
 
-      <div class="progress-text" id="progressText">0 / 0 항목 완료</div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(34,197,94,0.2);color:var(--green);border:1.5px solid var(--green);">○</div>양호</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(245,158,11,0.2);color:var(--yellow);border:1.5px solid var(--yellow);">△</div>보완</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(239,68,68,0.2);color:var(--red);border:1.5px solid var(--red);">X</div>불량</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(100,116,139,0.2);color:#94a3b8;border:1.5px solid #64748b;">-</div>해당없음</div>
       </div>
+
+      <div class="prog-text" id="progText">0 / 0 항목 완료</div>
+      <div class="prog-wrap"><div class="prog-fill" id="progBar" style="width:0%"></div></div>
 
       <div id="checklistContainer"></div>
 
-      <div class="section-title" style="margin-top:20px">📝 특이사항 메모</div>
-      <textarea class="memo-area" id="memoArea" placeholder="불안전 요소, 개선 필요 사항 등을 입력하세요..."></textarea>
+      <div class="sec-title" style="margin-top:20px;">📝 기타 사항</div>
+      <textarea class="ta" id="memoEtc" placeholder="기타 특이사항을 자유롭게 입력하세요..."></textarea>
 
       <button class="btn-ghost" onclick="goStep(1)">← 이전</button>
-      <button class="btn-primary" id="step2Next" onclick="goStep(3)" disabled>점검 결과 확인 →</button>
+      <button class="btn-primary" id="step2Next" onclick="goStep(3)" disabled>결과 확인 →</button>
     </div>
   </div>
 
-  <!-- ── STEP 3: 확인 및 제출 ── -->
+  <!-- STEP 3: 부적합 및 최종 확인 -->
   <div class="step-screen" id="step3">
     <div class="card">
       <div class="card-label">STEP 04 / 04</div>
-      <div class="card-title">점검 결과 최종 확인</div>
+      <div class="card-title">부적합 사항 및 최종 확인</div>
 
+      <div id="ngSection"></div>
       <div id="summaryContent"></div>
 
-      <div class="warn-box" id="ngWarning" style="display:none">
-        <span>⚠️</span>
-        <span>불량(NG) 항목이 있습니다. 즉시 조치 후 보고하세요.</span>
-      </div>
-
-      <div style="margin-top:16px;">
-        <div class="card-label">수신 이메일</div>
-        <div id="emailList" style="font-size:12px; color:var(--text2); font-family:'JetBrains Mono',monospace; line-height:1.8;"></div>
+      <div style="margin-top:14px;">
+        <div class="card-label">수신 이메일 (해당 조)</div>
+        <div id="emailList" style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;line-height:2;"></div>
       </div>
 
       <button class="btn-ghost" onclick="goStep(2)">← 수정</button>
-      <button class="btn-primary" onclick="submitResult()">📤 결과 제출 및 이메일 발송</button>
+      <button class="btn-primary" onclick="submitResult()">📤 제출 및 이메일 발송</button>
     </div>
   </div>
 
-  <!-- ── STEP 4: 완료 ── -->
+  <!-- STEP 4: 완료 -->
   <div class="step-screen" id="step4">
-    <div class="card" style="text-align:center; padding:32px 20px;">
-      <div class="result-icon">✅</div>
-      <div class="result-title">점검 완료</div>
-      <div class="result-sub" id="resultSubText">이메일 발송이 완료되었습니다.</div>
-
-      <div id="resultSummaryFinal"></div>
-
-      <div style="margin-top:24px; padding:16px; background:var(--surface2); border-radius:12px; text-align:left;">
-        <div class="card-label" style="margin-bottom:8px">이메일 발송 내역</div>
-        <div id="emailSentList" style="font-size:11px; color:var(--text2); font-family:'JetBrains Mono',monospace; line-height:2;"></div>
+    <div class="card" style="text-align:center;padding:28px 18px;">
+      <div class="result-icon" id="resultIcon">✅</div>
+      <div style="font-size:19px;font-weight:700;margin-bottom:8px;">점검 완료</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;" id="resultSub"></div>
+      <div id="resultStats"></div>
+      <div style="margin-top:20px;padding:14px;background:var(--surface2);border-radius:10px;text-align:left;">
+        <div class="card-label" style="margin-bottom:6px;">발송 내역</div>
+        <div id="emailSentList" style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;line-height:2;"></div>
       </div>
-
-      <button class="btn-primary" style="margin-top:20px;" onclick="resetAll()">🔄 새 점검 시작</button>
+      <button class="btn-primary" style="margin-top:18px;" onclick="resetAll()">🔄 새 점검 시작</button>
     </div>
   </div>
 
 </div>
 
 <script>
-// ─── 교대조 달력 데이터 (Excel serial → ABCD조 매핑) ───
-// Excel 시리얼 45658 = 2025-01-01 (1일부터 반복 패턴)
-const SHIFT_CALENDAR = {};
-const rawCalendar = [
-  [45658,'A','B','C'],[45659,'A','B','D'],[45660,'A','B','D'],
-  [45661,'A','C','D'],[45662,'A','C','D'],[45663,'B','C','D'],
-  [45664,'B','C','A'],[45665,'B','C','A'],[45666,'B','D','A'],
-  [45667,'B','D','A'],[45668,'C','D','A'],[45669,'C','D','B'],
-  [45670,'C','D','B'],[45671,'C','A','B'],[45672,'C','A','B'],
-  [45673,'D','A','B'],[45674,'D','A','C'],[45675,'D','A','C'],
-  [45676,'D','B','C'],[45677,'D','B','C'],
-];
-// 20일 패턴 반복
-for (let i = 0; i < 800; i++) {
-  const base = rawCalendar[i % 20];
-  const serial = base[0] + Math.floor(i / 20) * 20;
-  SHIFT_CALENDAR[serial] = { morning: base[1], afternoon: base[2], night: base[3] };
-}
+// ── Apps Script URL ──────────────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyx1UNeXi_U__DUMApuSLANUODE1TORnX3C3PCQE9l0ND_-ZQiGV15fbROew68eyekU/exec';
 
-// Excel serial 날짜 변환
-function excelSerialToDate(serial) {
-  const d = new Date((serial - 25569) * 86400 * 1000);
-  return d;
-}
-function dateToExcelSerial(date) {
-  return Math.floor(date.getTime() / 86400000) + 25569;
-}
-
-// 현재 조 계산
-function getCurrentShiftInfo() {
-  const now = new Date();
-  const serial = dateToExcelSerial(now);
-  const hour = now.getHours();
-  const entry = SHIFT_CALENDAR[serial] || SHIFT_CALENDAR[serial - (serial % 20 === 0 ? 0 : serial % 20)];
-  if (!entry) return { shift: '?', turn: '오전' };
-
-  let turn, shift;
-  if (hour >= 6 && hour < 14) { turn = '오전'; shift = entry.morning; }
-  else if (hour >= 14 && hour < 22) { turn = '오후'; shift = entry.afternoon; }
-  else { turn = '야간'; shift = entry.night; }
-  return { shift, turn, entry };
-}
-
-// ─── 이메일 목록 ───
+// ── 이메일 맵 ─────────────────────────────────────────────────────────
 const EMAIL_MAP = {
-  'A': ['19573091@hankookn.com', 'kimsol@hankookn.com', 'milal11@hankookn.com'],
-  'B': ['19670334@hankookn.com', 'kimsol@hankookn.com', 'milal11@hankookn.com'],
-  'C': ['19672549@hankookn.com', 'kimsol@hankookn.com', 'milal11@hankookn.com'],
-  'D': ['19474718@hankookn.com', 'kimsol@hankookn.com', 'milal11@hankookn.com'],
+  'A':['19573091@hankookn.com','kimsol@hankookn.com','milal11@hankookn.com'],
+  'B':['19670334@hankookn.com','kimsol@hankookn.com','milal11@hankookn.com'],
+  'C':['19672549@hankookn.com','kimsol@hankookn.com','milal11@hankookn.com'],
+  'D':['19474718@hankookn.com','kimsol@hankookn.com','milal11@hankookn.com'],
 };
 
-// ─── 체크리스트 데이터 ───
-const CHECKLIST = {
-  common: [
-    { id:'c1', text:'통로 및 계단 정리정돈 이물질 제거 여부', law:'시행령 §15 ④' },
-    { id:'c2', text:'비상구 및 대피로 확보 여부', law:'안전보건규칙 §17' },
-    { id:'c3', text:'소화기 위치·압력 정상 여부', law:'소방시설법 §10' },
-    { id:'c4', text:'작업자 안전모·안전화 착용 여부', law:'시행령 §15 ②' },
-    { id:'c5', text:'방호장치(커버·가드) 정상 작동 여부', law:'안전보건규칙 §87' },
-    { id:'c6', text:'전기 배선 및 분전함 이상 유무', law:'안전보건규칙 §301' },
-    { id:'c7', text:'안전표지판 훼손·탈락 여부', law:'산안법 §37' },
-    { id:'c8', text:'작업 중 안전 현수막 게시 여부', law:'안전보건규칙 §35' },
-  ],
-  '1층': [
-    { id:'f1', text:'원료(카본블랙, 오일 등) 보관 용기 밀폐 여부', law:'안전보건규칙 §225' },
-    { id:'f2', text:'계량 설비 누출 및 이상 유무', law:'시행령 §15 ①' },
-    { id:'f3', text:'슈트(chute) 체증 여부 및 청소 상태', law:'시행령 §15 ①' },
-    { id:'f4', text:'지게차 동선 구분 표시 및 보행자 안전선 유지', law:'안전보건규칙 §176' },
-    { id:'f5', text:'오일·약품류 바닥 누출 미끄럼 위험 여부', law:'안전보건규칙 §3' },
-    { id:'f6', text:'위험물 취급구역 출입금지 표시 여부', law:'산안법 §37' },
-  ],
-  '중2층': [
-    { id:'m1', text:'믹서(Mixer) 방호문 잠금 및 인터록 정상 여부', law:'안전보건규칙 §87' },
-    { id:'m2', text:'드롭도어(Drop door) 닫힘 상태 및 작동 이상 여부', law:'안전보건규칙 §88' },
-    { id:'m3', text:'과믹싱(Over-mixing) 방지 알람 정상 작동 여부', law:'시행령 §15 ①' },
-    { id:'m4', text:'램(Ram) 상승·하강 시 작업자 접근 통제 여부', law:'안전보건규칙 §87' },
-    { id:'m5', text:'고온 배출 고무 주변 화재 위험 요소 제거 여부', law:'안전보건규칙 §225' },
-    { id:'m6', text:'배찌바(Batch-off) 고무 걸림 상태 이상 여부', law:'시행령 §15 ①' },
-    { id:'m7', text:'P-오일 라인 누출 여부', law:'안전보건규칙 §225' },
-  ],
-  '2층': [
-    { id:'s1', text:'배출된 고무 보류장 이동 시 살수 처리 여부', law:'안전보건규칙 §225' },
-    { id:'s2', text:'이송 컨베이어 방호커버 설치 및 상태', law:'안전보건규칙 §87' },
-    { id:'s3', text:'작업발판·이동통로 고정 상태 이상 유무', law:'안전보건규칙 §23' },
-    { id:'s4', text:'개구부 덮개 또는 안전망 설치 여부', law:'안전보건규칙 §43' },
-    { id:'s5', text:'안전난간 설치 및 고정 상태', law:'안전보건규칙 §13' },
-    { id:'s6', text:'중량물 운반 시 2인 이상 작업 준수 여부', law:'안전보건규칙 §39' },
-  ],
-  '3층': [
-    { id:'t1', text:'고소작업 안전대 부착 설비(안전로프) 점검', law:'안전보건규칙 §44' },
-    { id:'t2', text:'안전난간 손상 및 고정 볼트 이완 여부', law:'안전보건규칙 §13' },
-    { id:'t3', text:'설비 상부 개구부 덮개 위치·고정 상태', law:'안전보건규칙 §43' },
-    { id:'t4', text:'고소작업 중 하부 작업자 출입 통제 여부', law:'안전보건규칙 §44' },
-    { id:'t5', text:'설비 점검구 잠금 및 표지 부착 여부', law:'시행령 §15 ①' },
-    { id:'t6', text:'긴급 정지 버튼 접근 가능 여부', law:'안전보건규칙 §90' },
-  ],
-};
+// ── 체크리스트 데이터 ─────────────────────────────────────────────────
+// target: 'common' | '전' | '후' | '야'
+const CHECKLIST = [
+  // 공통 사항
+  {id:'c01', target:'common', text:'작업시작 전 근로자 상태 확인 (조회 시 확인)'},
+  {id:'c02', target:'common', text:'통로, 계단에 통행 방해 요소 정리정돈'},
+  {id:'c03', target:'common', text:'작업 전 방호장치 이상유무 확인 (센서, 인터록, 커버 등)'},
+  {id:'c04', target:'common', text:'급정지 장치 동작 상태 확인'},
+  {id:'c05', target:'common', text:'전선 연결 상태 (피복 노출 여부)'},
+  {id:'c06', target:'common', text:'설비 및 주변 청소 실시 (필요 시 방진마스크 등 보호구 착용)'},
+  {id:'c07', target:'common', text:'보호구 착용 상태 점검 및 보호구함 관리 상태 확인'},
+  {id:'c08', target:'common', text:'지정장소 외 흡연 금지 및 휴대폰 사용 금지 확인'},
+  {id:'c09', target:'common', text:'지게차 탑승 전 일상점검 여부 (QR 인증)'},
+  {id:'c10', target:'common', text:'지게차 과적·목적 이외 사용·과속 여부 확인'},
+  {id:'c11', target:'common', text:'위험장소 방호조치, 출입금지 조치 확인'},
+  {id:'c12', target:'common', text:'지게차 운전 시 안전벨트 착용, 하차 시 시동키 분리 여부'},
+  {id:'c13', target:'common', text:'정기 및 수시 위험성평가 이행 및 개선사항 확인'},
+  // 전(오전)
+  {id:'m01', target:'전', text:'조도, 작업 발판 등의 이상유무'},
+  {id:'m02', target:'전', text:'소화전·소화기 전방 1m 이내 장애물 비치 여부'},
+  {id:'m03', target:'전', text:'화물용 승강기·컨베이어 탑승 여부 및 낙하 위험 여부'},
+  {id:'m04', target:'전', text:'유황은 불과 직접 접촉하지 않도록 관리'},
+  {id:'m05', target:'전', text:'리프트 방호장치 (과부하·비상정지·권과 방지 장치) 이상유무'},
+  {id:'m06', target:'전', text:'밀폐공간 출입 작업 시 감시인 배치 및 작업방법 주지'},
+  // 후(오후)
+  {id:'a01', target:'후', text:'기름걸레·기름묻은 장갑 뚜껑 있는 철제용기에 분리 배출'},
+  {id:'a02', target:'후', text:'구급함 관리 상태 확인 및 사용법 주지'},
+  {id:'a03', target:'후', text:'크레인·호이스트 후크·해지장치·체인·와이어 없음 또는 변형 여부'},
+  {id:'a04', target:'후', text:'크레인·호이스트 경고표지 부착 여부 및 하중 초과 사용 여부'},
+  {id:'a05', target:'후', text:'선풍기 날개·프레임 등에 손가락 접촉 위험 여부'},
+  // 야(야간)
+  {id:'n01', target:'야', text:'조도, 작업발판 등의 이상유무'},
+  {id:'n02', target:'야', text:'소화전·소화기 월간 점검 실시 여부'},
+  {id:'n03', target:'야', text:'컨베이어 탑승 금지 여부 및 낙하 위험 여부'},
+  {id:'n04', target:'야', text:'압력용기 명칭표기 (최고 사용압력·제조년월일·제조회사) 여부'},
+  {id:'n05', target:'야', text:'안전인증 합격증 부착 여부 (압력용기, 크레인/호이스트 2T 이상, 롤)'},
+  {id:'n06', target:'야', text:'화학물질 체크리스트 작성 (매일 야간조)'},
+  {id:'n07', target:'야', text:'국소배기장치 체크리스트 작성 (매월 30일)'},
+];
 
-// ─── 상태 ───
+// ── 상태 ──────────────────────────────────────────────────────────────
 let state = {
-  shift: null,
-  location: null,
-  gpsLat: null,
-  gpsLng: null,
-  gpsAccuracy: null,
-  checks: {},
-  memo: '',
-  timestamp: null,
+  shift:null, turn:null,
+  gpsLat:null, gpsLng:null, gpsAccuracy:null,
+  checks:{}, ngMemos:{}, memo:'', timestamp:null,
 };
 
-// ─── 초기화 ───
-window.onload = function() {
-  updateStepDots(0);
-  startGPS();
-  updateShiftBadge();
-};
+// ── 초기화 ────────────────────────────────────────────────────────────
+window.onload = () => { updateStepDots(0); startGPS(); updateShiftBadge(); };
 
-function updateShiftBadge() {
-  const info = getCurrentShiftInfo();
-  const badge = document.getElementById('currentShiftBadge');
-  badge.textContent = info.shift !== '?' ? `${info.shift}조 ${info.turn}번` : '조정보 없음';
+function updateShiftBadge(){
+  const now = new Date();
+  const h = now.getHours();
+  const turn = h>=6&&h<14?'오전':h>=14&&h<22?'오후':'야간';
+  document.getElementById('currentShiftBadge').textContent = `현재 ${turn}`;
 }
 
-// GPS 시작
-function startGPS() {
-  const dot = document.getElementById('gpsDot');
-  const text = document.getElementById('gpsText');
-  const coords = document.getElementById('gpsCoords');
-
-  if (!navigator.geolocation) {
-    dot.className = 'gps-dot error';
-    text.textContent = 'GPS를 지원하지 않는 브라우저입니다';
-    return;
-  }
-
-  navigator.geolocation.watchPosition(
-    (pos) => {
-      state.gpsLat = pos.coords.latitude.toFixed(6);
-      state.gpsLng = pos.coords.longitude.toFixed(6);
-      state.gpsAccuracy = Math.round(pos.coords.accuracy);
-      dot.className = 'gps-dot active';
-      text.textContent = `GPS 수신 완료 (정확도: ±${state.gpsAccuracy}m)`;
-      coords.textContent = `${state.gpsLat}, ${state.gpsLng}`;
-      checkStep0Ready();
-    },
-    (err) => {
-      dot.className = 'gps-dot error';
-      text.textContent = `GPS 오류: ${err.message}`;
-      coords.textContent = '위치 확인 실패 - 네트워크 위치 사용 중';
-      // GPS 실패해도 진행 가능하게 (실내 환경 고려)
-      state.gpsLat = 'N/A';
-      state.gpsLng = 'N/A';
-      state.gpsAccuracy = null;
-      checkStep0Ready();
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
+// GPS
+function startGPS(){
+  const dot=document.getElementById('gpsDot'), txt=document.getElementById('gpsText'), coord=document.getElementById('gpsCoords');
+  if(!navigator.geolocation){dot.className='gps-dot error';txt.textContent='GPS 미지원 브라우저';return;}
+  navigator.geolocation.watchPosition(p=>{
+    state.gpsLat=p.coords.latitude.toFixed(6);
+    state.gpsLng=p.coords.longitude.toFixed(6);
+    state.gpsAccuracy=Math.round(p.coords.accuracy);
+    dot.className='gps-dot active';
+    txt.textContent=`GPS 수신 완료 (±${state.gpsAccuracy}m)`;
+    coord.textContent=`${state.gpsLat}, ${state.gpsLng}`;
+    chkStep0();
+  },err=>{
+    dot.className='gps-dot error';
+    txt.textContent='GPS 오류 - 진행 가능합니다';
+    state.gpsLat='N/A'; state.gpsLng='N/A';
+    chkStep0();
+  },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
 }
 
-function checkStep0Ready() {
-  const btn = document.getElementById('step0Next');
-  btn.disabled = !(state.shift && (state.gpsLat));
+function chkStep0(){
+  document.getElementById('step0Next').disabled=!state.shift;
 }
 
 // 조 선택
-function selectShift(s) {
-  state.shift = s;
-  document.querySelectorAll('#shiftGrid .option-btn').forEach((el, i) => {
-    el.classList.toggle('selected', ['A','B','C','D'][i] === s);
-  });
-
-  // 해당 조의 현재 근무 정보 표시
-  const info = getCurrentShiftInfo();
-  const shiftInfo = document.getElementById('shiftInfo');
-  const shiftInfoText = document.getElementById('shiftInfoText');
-  shiftInfo.style.display = 'block';
-
-  const now = new Date();
-  const serial = dateToExcelSerial(now);
-  const entry = SHIFT_CALENDAR[serial];
-  if (entry) {
-    shiftInfoText.textContent = `오늘(${now.getMonth()+1}/${now.getDate()}) 근무: 오전 ${entry.morning}조 / 오후 ${entry.afternoon}조 / 야간 ${entry.night}조`;
-  } else {
-    shiftInfoText.textContent = `선택된 조: ${s}조`;
-  }
-
-  checkStep0Ready();
-  updateShiftBadge();
+function selectShift(s){
+  state.shift=s;
+  document.querySelectorAll('#shiftGrid .option-btn').forEach((el,i)=>el.classList.toggle('selected',['A','B','C','D'][i]===s));
+  const now=new Date();
+  document.getElementById('shiftInfo').style.display='block';
+  document.getElementById('shiftInfoText').textContent=`${s}조 선택됨 · ${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  chkStep0();
 }
 
-// 위치 선택
-function selectLocation(loc) {
-  state.location = loc;
-  document.querySelectorAll('#locationGrid .option-btn').forEach(el => {
-    el.classList.toggle('selected', el.textContent.trim().startsWith(loc));
-  });
-  document.getElementById('step1Next').disabled = false;
+// 교대 선택
+function selectTurn(t){
+  state.turn=t;
+  const labels=['전','후','야'];
+  document.querySelectorAll('#turnGrid .option-btn').forEach((el,i)=>el.classList.toggle('selected',labels[i]===t));
+  document.getElementById('step1Next').disabled=false;
 }
 
 // 단계 이동
-function goStep(n) {
-  document.querySelectorAll('.step-screen').forEach(el => el.classList.remove('active'));
-  document.getElementById('step' + n).classList.add('active');
+function goStep(n){
+  document.querySelectorAll('.step-screen').forEach(el=>el.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
   updateStepDots(n);
-  window.scrollTo(0, 0);
-
-  if (n === 2) renderChecklist();
-  if (n === 3) renderSummary();
+  window.scrollTo(0,0);
+  if(n===2) renderChecklist();
+  if(n===3) renderSummary();
 }
 
-function goStep1() {
-  if (!state.shift) { alert('근무조를 선택해주세요.'); return; }
-  goStep(1);
-}
-
-function updateStepDots(current) {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('dot' + i);
-    dot.className = 'step-dot' + (i < current ? ' done' : i === current ? ' active' : '');
+function updateStepDots(cur){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('dot'+i);
+    d.className='step-dot'+(i<cur?' done':i===cur?' active':'');
   }
 }
 
 // 체크리스트 렌더링
-function renderChecklist() {
-  const container = document.getElementById('checklistContainer');
-  container.innerHTML = '';
-  document.getElementById('checklistTitle').textContent = `안전 점검 체크리스트 · ${state.location}`;
+function getActiveItems(){
+  return CHECKLIST.filter(i=>i.target==='common'||i.target===state.turn);
+}
 
-  const items = [...CHECKLIST.common, ...(CHECKLIST[state.location] || [])];
+function renderChecklist(){
+  const container=document.getElementById('checklistContainer');
+  container.innerHTML='';
+  const turnLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
+  document.getElementById('checkTitle').textContent=`${state.shift}조 ${turnLabel}번 점검 체크리스트`;
 
-  // 공통 항목
-  const secCommon = document.createElement('div');
-  secCommon.innerHTML = '<div class="section-title">📋 공통 안전 사항 (산안법 시행령 §15)</div>';
-  CHECKLIST.common.forEach(item => secCommon.appendChild(makeCheckItem(item)));
-  container.appendChild(secCommon);
+  // 공통 섹션
+  const commons=CHECKLIST.filter(i=>i.target==='common');
+  const secC=document.createElement('div');
+  secC.innerHTML='<div class="sec-title">📋 공통 사항 (전·후·야 공통)</div>';
+  commons.forEach(item=>secC.appendChild(makeItem(item)));
+  container.appendChild(secC);
 
-  // 층별 항목
-  const secFloor = document.createElement('div');
-  secFloor.innerHTML = `<div class="section-title">🏭 ${state.location} 전용 점검 항목</div>`;
-  (CHECKLIST[state.location] || []).forEach(item => secFloor.appendChild(makeCheckItem(item)));
-  container.appendChild(secFloor);
-
+  // 교대별 섹션
+  const turns=CHECKLIST.filter(i=>i.target===state.turn);
+  if(turns.length>0){
+    const turnIcon={'전':'🌅','후':'🌇','야':'🌙'}[state.turn]||'🔧';
+    const secT=document.createElement('div');
+    secT.innerHTML=`<div class="sec-title">${turnIcon} ${turnLabel}번 전용 항목</div>`;
+    turns.forEach(item=>secT.appendChild(makeItem(item)));
+    container.appendChild(secT);
+  }
   updateProgress();
 }
 
-function makeCheckItem(item) {
-  const div = document.createElement('div');
-  div.className = 'check-item';
-  div.innerHTML = `
+function makeItem(item){
+  const div=document.createElement('div');
+  div.className='check-item';
+  const tagClass=item.target==='common'?'tag-common':item.target==='전'?'tag-morning':item.target==='후'?'tag-afternoon':'tag-night';
+  const tagLabel=item.target==='common'?'공통':item.target==='전'?'전':item.target==='후'?'후':'야';
+  const cur=state.checks[item.id]||'';
+  div.innerHTML=`
     <div class="check-item-text">
-      ${item.text}
-      <div class="law-ref">📌 ${item.law}</div>
+      <span class="tag ${tagClass}">${tagLabel}</span>${item.text}
     </div>
     <div class="check-btns">
-      <button class="cBtn ok" onclick="setCheck('${item.id}','ok',this)" title="정상">✓</button>
-      <button class="cBtn ng" onclick="setCheck('${item.id}','ng',this)" title="불량">✗</button>
-      <button class="cBtn na" onclick="setCheck('${item.id}','na',this)" title="해당없음">—</button>
-    </div>
-  `;
-  // 이미 선택된 값 복원
-  if (state.checks[item.id]) {
-    const v = state.checks[item.id];
-    div.querySelectorAll('.cBtn').forEach(btn => {
-      if (btn.classList.contains(v)) btn.classList.add('active');
-    });
-  }
+      <button class="cBtn ok${cur==='ok'?' active':''}"  onclick="setCheck('${item.id}','ok',this)"  title="○ 양호">○</button>
+      <button class="cBtn partial${cur==='partial'?' active':''}" onclick="setCheck('${item.id}','partial',this)" title="△ 보완">△</button>
+      <button class="cBtn ng${cur==='ng'?' active':''}"  onclick="setCheck('${item.id}','ng',this)"  title="X 불량">X</button>
+      <button class="cBtn na${cur==='na'?' active':''}"  onclick="setCheck('${item.id}','na',this)"  title="- 해당없음">-</button>
+    </div>`;
   return div;
 }
 
-function setCheck(id, val, btn) {
-  state.checks[id] = val;
-  const parent = btn.closest('.check-btns');
-  parent.querySelectorAll('.cBtn').forEach(b => b.classList.remove('active'));
+function setCheck(id,val,btn){
+  state.checks[id]=val;
+  btn.closest('.check-btns').querySelectorAll('.cBtn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   updateProgress();
 }
 
-function updateProgress() {
-  const items = [...CHECKLIST.common, ...(CHECKLIST[state.location] || [])];
-  const total = items.length;
-  const done = items.filter(i => state.checks[i.id]).length;
-  document.getElementById('progressText').textContent = `${done} / ${total} 항목 완료`;
-  document.getElementById('progressBar').style.width = (done / total * 100) + '%';
-  document.getElementById('step2Next').disabled = done < total;
+function updateProgress(){
+  const items=getActiveItems();
+  const total=items.length;
+  const done=items.filter(i=>state.checks[i.id]).length;
+  document.getElementById('progText').textContent=`${done} / ${total} 항목 완료`;
+  document.getElementById('progBar').style.width=(done/total*100)+'%';
+  document.getElementById('step2Next').disabled=done<total;
 }
 
-// 요약 렌더링
-function renderSummary() {
-  state.memo = document.getElementById('memoArea').value;
-  state.timestamp = new Date().toLocaleString('ko-KR');
+// 요약 + 부적합 입력 렌더링
+function renderSummary(){
+  state.memo=document.getElementById('memoEtc').value;
+  const items=getActiveItems();
+  const okC=items.filter(i=>state.checks[i.id]==='ok').length;
+  const partC=items.filter(i=>state.checks[i.id]==='partial').length;
+  const ngC=items.filter(i=>state.checks[i.id]==='ng').length;
+  const naC=items.filter(i=>state.checks[i.id]==='na').length;
+  const ngItems=items.filter(i=>state.checks[i.id]==='ng'||state.checks[i.id]==='partial');
+  const emails=EMAIL_MAP[state.shift]||[];
+  const turnLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
+  state.timestamp=new Date().toLocaleString('ko-KR');
 
-  const items = [...CHECKLIST.common, ...(CHECKLIST[state.location] || [])];
-  const okCount = items.filter(i => state.checks[i.id] === 'ok').length;
-  const ngCount = items.filter(i => state.checks[i.id] === 'ng').length;
-  const naCount = items.filter(i => state.checks[i.id] === 'na').length;
+  // 부적합/보완 항목 조치 입력
+  const ngSec=document.getElementById('ngSection');
+  if(ngItems.length>0){
+    let html=`<div class="sec-title" style="color:var(--red);">⚠️ 부적합·보완 항목 조치 사항 입력</div>`;
+    ngItems.forEach(item=>{
+      const sym=state.checks[item.id]==='ng'?'X':'△';
+      html+=`
+        <div class="ng-row">
+          <div class="ng-item-name">[${sym}] ${item.text}</div>
+          <textarea class="ta" id="ng_${item.id}" placeholder="부적합 사항 및 조치 결과를 입력하세요..." style="min-height:56px;">${state.ngMemos[item.id]||''}</textarea>
+        </div>`;
+    });
+    ngSec.innerHTML=html;
+  } else {
+    ngSec.innerHTML=`<div class="info-box"><span>✅</span><span>보완·불량 항목 없음 — 모든 항목 양호</span></div>`;
+  }
 
-  const ngItems = items.filter(i => state.checks[i.id] === 'ng');
-
-  const emails = EMAIL_MAP[state.shift] || [];
-
-  document.getElementById('ngWarning').style.display = ngCount > 0 ? 'flex' : 'none';
-
-  document.getElementById('summaryContent').innerHTML = `
-    <div class="summary-row"><span class="summary-label">점검 일시</span><span class="summary-value">${state.timestamp}</span></div>
-    <div class="summary-row"><span class="summary-label">근무조</span><span class="summary-value">${state.shift}조</span></div>
-    <div class="summary-row"><span class="summary-label">점검 위치</span><span class="summary-value">${state.location}</span></div>
-    <div class="summary-row"><span class="summary-label">GPS 좌표</span><span class="summary-value" style="font-family:monospace;font-size:12px;">${state.gpsLat}, ${state.gpsLng}</span></div>
-    <div class="summary-row"><span class="summary-label">총 점검 항목</span><span class="summary-value">${items.length}개</span></div>
-    <div style="padding:12px 0;">
-      <div class="stat-chips">
-        <div class="stat-chip chip-ok">✓ 정상 ${okCount}</div>
-        <div class="stat-chip chip-ng">✗ 불량 ${ngCount}</div>
-        <div class="stat-chip chip-na">— 해당없음 ${naCount}</div>
-      </div>
+  document.getElementById('summaryContent').innerHTML=`
+    <div class="sec-title">📊 점검 결과 요약</div>
+    <div class="sum-row"><span class="sum-label">점검 일시</span><span class="sum-value">${state.timestamp}</span></div>
+    <div class="sum-row"><span class="sum-label">근무조 / 교대</span><span class="sum-value">${state.shift}조 / ${turnLabel}번</span></div>
+    <div class="sum-row"><span class="sum-label">GPS 좌표</span><span class="sum-value" style="font-family:monospace;font-size:11px;">${state.gpsLat}, ${state.gpsLng}</span></div>
+    <div class="sum-row"><span class="sum-label">총 점검 항목</span><span class="sum-value">${items.length}개</span></div>
+    <div class="stat-chips">
+      <div class="stat-chip chip-ok">○ 양호 ${okC}</div>
+      <div class="stat-chip chip-partial">△ 보완 ${partC}</div>
+      <div class="stat-chip chip-ng">X 불량 ${ngC}</div>
+      <div class="stat-chip chip-na">- 해당없음 ${naC}</div>
     </div>
-    ${ngItems.length > 0 ? `
-      <div class="section-title">⚠️ 불량 항목</div>
-      ${ngItems.map(i => `<div class="warn-box"><span>✗</span><span>${i.text}</span></div>`).join('')}
-    ` : ''}
-    ${state.memo ? `<div class="summary-row"><span class="summary-label">특이사항</span><span class="summary-value">${state.memo}</span></div>` : ''}
+    ${state.memo?`<div class="sum-row"><span class="sum-label">기타 사항</span><span class="sum-value">${state.memo}</span></div>`:''}
   `;
-
-  document.getElementById('emailList').innerHTML = emails.map(e => `📧 ${e}`).join('<br>');
+  document.getElementById('emailList').innerHTML=emails.map(e=>`📧 ${e}`).join('<br>');
 }
-
-// ─── Google Apps Script 웹훅 URL ───
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyx1UNeXi_U__DUMApuSLANUODE1TORnX3C3PCQE9l0ND_-ZQiGV15fbROew68eyekU/exec';
 
 // 제출
-async function submitResult() {
-  const overlay = document.getElementById('overlay');
+async function submitResult(){
+  // 부적합 메모 수집
+  const ngItems=getActiveItems().filter(i=>state.checks[i.id]==='ng'||state.checks[i.id]==='partial');
+  ngItems.forEach(item=>{
+    const el=document.getElementById('ng_'+item.id);
+    if(el) state.ngMemos[item.id]=el.value;
+  });
+
+  const overlay=document.getElementById('overlay');
   overlay.classList.add('show');
-  document.getElementById('overlayText').textContent = '구글 시트 저장 및 이메일 발송 중...';
+  document.getElementById('overlayText').textContent='구글 시트 저장 및 이메일 발송 중...';
 
-  const items = [...CHECKLIST.common, ...(CHECKLIST[state.location] || [])];
-  const okCount  = items.filter(i => state.checks[i.id] === 'ok').length;
-  const ngCount  = items.filter(i => state.checks[i.id] === 'ng').length;
-  const naCount  = items.filter(i => state.checks[i.id] === 'na').length;
-  const ngItems  = items.filter(i => state.checks[i.id] === 'ng');
-  const emails   = EMAIL_MAP[state.shift] || [];
+  const items=getActiveItems();
+  const okC=items.filter(i=>state.checks[i.id]==='ok').length;
+  const partC=items.filter(i=>state.checks[i.id]==='partial').length;
+  const ngC=items.filter(i=>state.checks[i.id]==='ng').length;
+  const naC=items.filter(i=>state.checks[i.id]==='na').length;
+  const emails=EMAIL_MAP[state.shift]||[];
+  const turnLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
 
-  // 이메일 본문
-  const emailBody = [
-    '=== 현장 안전 패트롤 점검 결과 ===',
-    '',
-    `▶ 점검 일시 : ${state.timestamp}`,
-    `▶ 근무조    : ${state.shift}조`,
-    `▶ 점검 위치 : ${state.location}`,
-    `▶ GPS 좌표  : ${state.gpsLat}, ${state.gpsLng}  (정확도: ±${state.gpsAccuracy || 'N/A'}m)`,
-    '',
-    '--- 점검 결과 ---',
-    `✅ 정상(OK)   : ${okCount}건`,
-    `❌ 불량(NG)   : ${ngCount}건`,
-    `➖ 해당없음   : ${naCount}건`,
-    '',
-    ngItems.length > 0
-      ? '--- 불량 항목 목록 ---\n' + ngItems.map((it,i) => `  ${i+1}. ${it.text}  [${it.law}]`).join('\n')
-      : '--- 불량 항목 없음 ---',
-    '',
-    '--- 특이사항 ---',
-    state.memo || '없음',
-    '',
-    '---',
-    '본 메일은 현장 안전 패트롤 앱에서 자동 발송되었습니다.',
-  ].join('\n');
+  // 부적합 항목 텍스트
+  const ngDetail=ngItems.map((item,i)=>{
+    const sym=state.checks[item.id]==='ng'?'X':'△';
+    const memo=state.ngMemos[item.id]||'(조치 내용 미입력)';
+    return `${i+1}. [${sym}] ${item.text}\n   → 조치: ${memo}`;
+  }).join('\n');
 
-  // 전송 페이로드
-  const payload = {
-    timestamp : state.timestamp,
-    shift     : state.shift,
-    location  : state.location,
-    gps       : `${state.gpsLat}, ${state.gpsLng}`,
-    accuracy  : state.gpsAccuracy || 'N/A',
-    ok        : okCount,
-    ng        : ngCount,
-    na        : naCount,
-    ngItems   : ngItems.map(it => it.text).join(' / ') || '없음',
-    memo      : state.memo || '없음',
-    toEmails  : emails.join(','),
-    subject   : `[안전패트롤] ${state.shift}조 ${state.location} 점검결과 - ${state.timestamp}`,
-    emailBody : emailBody,
+  const emailBody=`
+=== 관리감독자 업무 점검 결과 ===
+
+▶ 점검 일시  : ${state.timestamp}
+▶ 근무조     : ${state.shift}조
+▶ 교대 구분  : ${turnLabel}번
+▶ GPS 좌표   : ${state.gpsLat}, ${state.gpsLng} (±${state.gpsAccuracy||'N/A'}m)
+
+--- 점검 결과 ---
+○ 양호   : ${okC}건
+△ 보완   : ${partC}건
+X 불량   : ${ngC}건
+- 해당없음: ${naC}건
+
+${ngItems.length>0?`--- 부적합·보완 항목 및 조치 사항 ---\n${ngDetail}`:'--- 부적합 항목 없음 ✅ ---'}
+
+--- 기타 사항 ---
+${state.memo||'없음'}
+
+---
+본 메일은 한국타이어 정련공정 안전 패트롤 시스템에서 자동 발송되었습니다.
+  `.trim();
+
+  const payload={
+    timestamp:state.timestamp,
+    shift:state.shift,
+    turn:turnLabel,
+    gps:`${state.gpsLat}, ${state.gpsLng}`,
+    accuracy:state.gpsAccuracy||'N/A',
+    ok:okC, partial:partC, ng:ngC, na:naC,
+    ngDetail:ngDetail||'없음',
+    memo:state.memo||'없음',
+    toEmails:emails.join(','),
+    subject:`[안전패트롤] ${state.shift}조 ${turnLabel}번 점검결과 - ${state.timestamp}`,
+    emailBody:emailBody,
   };
 
-  try {
-    // Apps Script는 CORS preflight 없이 no-cors fetch로 호출
-    await fetch(APPS_SCRIPT_URL, {
-      method : 'POST',
-      mode   : 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify(payload),
-    });
-
+  try{
+    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     overlay.classList.remove('show');
-    showResult(okCount, ngCount, naCount, emails, true);
-
-  } catch (err) {
+    showResult(okC,partC,ngC,naC,emails,true);
+  }catch(err){
     overlay.classList.remove('show');
-    // 네트워크 오류 시에도 결과 화면은 표시
-    showResult(okCount, ngCount, naCount, emails, false, err.message);
+    showResult(okC,partC,ngC,naC,emails,false);
   }
 }
 
-function showResult(okCount, ngCount, naCount, emails, success, errMsg) {
+function showResult(okC,partC,ngC,naC,emails,success){
   goStep(4);
-
-  const icon = document.querySelector('#step4 .result-icon');
-  if (success) {
-    icon.textContent = '✅';
-    icon.style.borderColor = 'var(--green)';
-    icon.style.background  = 'rgba(34,197,94,0.15)';
-    document.getElementById('resultSubText').textContent =
-      `구글 시트 저장 완료 · ${state.shift}조 ${emails.length}명에게 이메일 발송 완료`;
-  } else {
-    icon.textContent = '⚠️';
-    icon.style.borderColor = 'var(--yellow)';
-    icon.style.background  = 'rgba(245,158,11,0.15)';
-    document.getElementById('resultSubText').textContent =
-      `네트워크 오류 발생 — Apps Script URL 또는 권한을 확인해 주세요.\n${errMsg || ''}`;
-  }
-
-  document.getElementById('emailSentList').innerHTML =
-    emails.map(e => `${success ? '✓' : '?'} ${e}`).join('<br>');
-
-  document.getElementById('resultSummaryFinal').innerHTML = `
+  const turnLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
+  document.getElementById('resultIcon').textContent=success?'✅':'⚠️';
+  document.getElementById('resultSub').textContent=
+    success?`구글 시트 기록 완료 · ${state.shift}조 ${emails.length}명에게 이메일 발송`:'저장 시도 완료 (네트워크 상태 확인)';
+  document.getElementById('resultStats').innerHTML=`
     <div class="stat-chips">
-      <div class="stat-chip chip-ok">✓ 정상 ${okCount}</div>
-      <div class="stat-chip chip-ng">✗ 불량 ${ngCount}</div>
-      <div class="stat-chip chip-na">— 해당없음 ${naCount}</div>
-    </div>
-    <div style="margin-top:12px; font-size:12px; color:var(--text2); text-align:center;">
-      구글 시트에서 전체 기록을 확인하세요
-    </div>
-  `;
+      <div class="stat-chip chip-ok">○ 양호 ${okC}</div>
+      <div class="stat-chip chip-partial">△ 보완 ${partC}</div>
+      <div class="stat-chip chip-ng">X 불량 ${ngC}</div>
+      <div class="stat-chip chip-na">- ${naC}</div>
+    </div>`;
+  document.getElementById('emailSentList').innerHTML=emails.map(e=>`${success?'✓':'?'} ${e}`).join('<br>');
 }
 
 // 초기화
-function resetAll() {
-  state = { shift:null, location:null, gpsLat:null, gpsLng:null, gpsAccuracy:null, checks:{}, memo:'', timestamp:null };
-  document.getElementById('memoArea').value = '';
-  document.querySelectorAll('.option-btn').forEach(el => el.classList.remove('selected'));
-  document.getElementById('step0Next').disabled = true;
-  document.getElementById('step1Next').disabled = true;
-  document.getElementById('shiftInfo').style.display = 'none';
-  goStep(0);
-  startGPS();
+function resetAll(){
+  state={shift:null,turn:null,gpsLat:null,gpsLng:null,gpsAccuracy:null,checks:{},ngMemos:{},memo:'',timestamp:null};
+  document.getElementById('memoEtc').value='';
+  document.querySelectorAll('.option-btn').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('step0Next').disabled=true;
+  document.getElementById('step1Next').disabled=true;
+  document.getElementById('shiftInfo').style.display='none';
+  goStep(0); startGPS();
 }
 </script>
 </body>
