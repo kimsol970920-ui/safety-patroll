@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>관리감독자 업무 점검</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f5a623">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="안전점검">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
   :root {
@@ -274,9 +280,9 @@ const EMAIL_MAP = {
 
 // ── GPS 현장 위치 설정 ────────────────────────────────────────────────
 // 한국타이어 대전공장 좌표 — 실제 좌표로 변경 가능
-const SITE_LAT  = 36.3504;   // ← 실제 공장 위도로 변경
-const SITE_LNG  = 127.3845;  // ← 실제 공장 경도로 변경
-const SITE_RADIUS_M = 300;   // 허용 반경 (미터) — 필요시 조정
+const SITE_LAT  = 36.4515444;  // 한국타이어 대전공장
+const SITE_LNG  = 127.4127681;
+const SITE_RADIUS_M = 300;     // 허용 반경 (미터)
 
 // 두 좌표 간 거리 계산 (Haversine)
 function calcDistance(lat1, lng1, lat2, lng2) {
@@ -324,7 +330,7 @@ const CHECKLIST = [
 let state = {
   shift:null, turn:null,
   gpsLat:null, gpsLng:null, gpsAccuracy:null,
-  gpsOk:false,   // 위치 검증 통과 여부
+  gpsOk:false, submitted:false,
   checks:{}, ngMemos:{}, memo:'', timestamp:null,
 };
 
@@ -383,8 +389,9 @@ function goStep(n){
   document.getElementById('step'+n).classList.add('active');
   updateStepDots(n);
   window.scrollTo(0,0);
-  if(n===2) renderChecklist();
-  if(n===3) renderSummary();
+  if(n===2){ renderChecklist(); startReminder(); }
+  if(n===3){ renderSummary(); stopReminder(); }
+  if(n===4) stopReminder();
 }
 
 function updateStepDots(cur){
@@ -500,6 +507,39 @@ function renderSummary(){
   document.getElementById('emailList').innerHTML=emails.map(e=>`📧 ${e}`).join('<br>');
 }
 
+// ── 미제출 시 반복 팝업 ───────────────────────────────────────────────
+let reminderTimer = null;
+
+function startReminder(){
+  stopReminder();
+  // 즉시 1회 + 이후 30초마다 반복
+  reminderTimer = setInterval(()=>{
+    const items = getActiveItems();
+    const done  = items.filter(i=>state.checks[i.id]).length;
+    const total = items.length;
+    if(done < total){
+      const remain = total - done;
+      alert(`⚠️ 점검 미완료\n\n아직 ${remain}개 항목이 체크되지 않았습니다.\n모든 항목을 점검해 주세요.`);
+    } else {
+      // 모두 체크됐으면 제출 유도
+      const go = confirm(`✅ 모든 항목 점검 완료!\n\n결과를 아직 제출하지 않았습니다.\n지금 제출하시겠습니까?`);
+      if(go) goStep(3);
+    }
+  }, 30000); // 30초마다
+}
+
+function stopReminder(){
+  if(reminderTimer){ clearInterval(reminderTimer); reminderTimer=null; }
+}
+
+// 페이지 벗어날 때 경고
+window.addEventListener('beforeunload', e=>{
+  if(state.turn && !state.submitted){
+    e.preventDefault();
+    e.returnValue='점검이 완료되지 않았습니다. 페이지를 나가시겠습니까?';
+  }
+});
+
 async function submitResult(){
   const ngItems=getActiveItems().filter(i=>state.checks[i.id]==='ng'||state.checks[i.id]==='partial');
   ngItems.forEach(item=>{const el=document.getElementById('ng_'+item.id);if(el)state.ngMemos[item.id]=el.value;});
@@ -549,9 +589,13 @@ ${state.memo||'없음'}
   try{
     await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     overlay.classList.remove('show');
+    state.submitted = true;
+    stopReminder();
     showResult(okC,partC,ngC,naC,emails,true);
   }catch(err){
     overlay.classList.remove('show');
+    state.submitted = true;
+    stopReminder();
     showResult(okC,partC,ngC,naC,emails,false);
   }
 }
@@ -573,7 +617,7 @@ function showResult(okC,partC,ngC,naC,emails,success){
 }
 
 function resetAll(){
-  state={shift:null,turn:null,gpsLat:null,gpsLng:null,gpsAccuracy:null,gpsOk:false,checks:{},ngMemos:{},memo:'',timestamp:null};
+  state={shift:null,turn:null,gpsLat:null,gpsLng:null,gpsAccuracy:null,gpsOk:false,checks:{},ngMemos:{},memo:'',timestamp:null,submitted:false};
   document.getElementById('memoEtc').value='';
   document.querySelectorAll('.option-btn').forEach(el=>el.classList.remove('selected'));
   document.getElementById('step0Next').disabled=true;
@@ -582,6 +626,77 @@ function resetAll(){
   document.getElementById('locationBlock').style.display='none';
   goStep(0); startGPS();
 }
+
+// ── PWA: Service Worker 등록 + 알림 권한 요청 ────────────────────────
+let swRegistration = null;
+
+async function initPWA() {
+  // 1) Service Worker 등록
+  if ('serviceWorker' in navigator) {
+    try {
+      swRegistration = await navigator.serviceWorker.register('service-worker.js');
+      console.log('SW 등록 완료');
+    } catch(e) {
+      console.warn('SW 등록 실패:', e);
+    }
+  }
+
+  // 2) 알림 권한 요청
+  if ('Notification' in window) {
+    if (Notification.permission === 'default') {
+      // 첫 방문: 팝업으로 허용 요청
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        showLocalNotification('✅ 알림 설정 완료', '점검 미완료 시 자동으로 알림을 보내드립니다.');
+        scheduleReminders();
+      }
+    } else if (Notification.permission === 'granted') {
+      scheduleReminders();
+    }
+  }
+
+  // 3) 주기적 백그라운드 동기화 등록 (Android Chrome 지원)
+  if (swRegistration && 'periodicSync' in swRegistration) {
+    try {
+      await swRegistration.periodicSync.register('patrol-reminder', {
+        minInterval: 60 * 60 * 1000  // 1시간
+      });
+    } catch(e) {
+      console.warn('PeriodicSync 미지원:', e);
+    }
+  }
+}
+
+// 로컬 알림 표시
+function showLocalNotification(title, body) {
+  if (Notification.permission !== 'granted') return;
+  if (swRegistration) {
+    swRegistration.showNotification(title, {
+      body, icon: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f6e1.png',
+      requireInteraction: true, tag: 'safety-patrol', renotify: true,
+      vibrate: [200, 100, 200],
+    });
+  } else {
+    new Notification(title, { body });
+  }
+}
+
+// 앱이 열려있을 때 1시간마다 미완료 알림
+let hourlyTimer = null;
+function scheduleReminders() {
+  if (hourlyTimer) clearInterval(hourlyTimer);
+  hourlyTimer = setInterval(() => {
+    if (!state.submitted) {
+      showLocalNotification(
+        '⚠️ 안전 패트롤 점검 미완료',
+        '오늘 점검 결과가 아직 제출되지 않았습니다. 지금 바로 점검해 주세요.'
+      );
+    }
+  }, 60 * 60 * 1000); // 1시간
+}
+
+// 페이지 로드 시 PWA 초기화
+window.addEventListener('load', initPWA);
 </script>
 </body>
 </html>
