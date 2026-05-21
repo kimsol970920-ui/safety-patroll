@@ -586,7 +586,8 @@ function renderCommonList(){
   qrSec.innerHTML=`
     <div class="sec-title" style="color:#a78bfa;margin-top:20px;">중2층 QR 인증 (구글폼 작성 필요)</div>
     <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:12px;padding:14px 16px;margin-bottom:10px;font-size:13px;color:#c4b5fd;line-height:1.7;">
-      중2층 각 위치의 QR을 스캔하고<br>구글폼을 작성 후 제출하세요.
+      📷 각 위치에 부착된 <strong>QR코드를 카메라로 스캔</strong>하세요.<br>
+      <span style="font-size:12px;opacity:0.8;">스캔하면 구글폼이 자동으로 열립니다. 폼 작성 후 제출하고 돌아오세요.</span>
     </div>
     <div id="m2LocList"></div>
   `;
@@ -603,15 +604,16 @@ function renderM2LocList(){
     const isDone=state.qrFormDone.has(loc.id);
     return `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border:1px solid ${isDone?'var(--green)':'var(--border)'};border-radius:10px;margin-bottom:8px;transition:all 0.2s;">
-      <span style="font-size:20px;">${isDone?'✅':'⬜'}</span>
+      <span style="font-size:22px;">${isDone?'✅':'📷'}</span>
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:600;color:${isDone?'var(--green)':'var(--text)'};">${loc.name}</div>
-        <div style="font-size:11px;color:var(--text2);">중2층 · 구글폼 작성 필요</div>
+        <div style="font-size:11px;color:${isDone?'var(--green)':'var(--text2)'};">
+          ${isDone?'구글폼 제출 완료':'현장 QR코드를 카메라로 스캔하세요'}
+        </div>
       </div>
-      <button onclick="showFormModal(QR_LOCATIONS.find(l=>l.id==='${loc.id}'))"
-        style="background:${isDone?'rgba(34,197,94,0.15)':'linear-gradient(135deg,#7c3aed,#3b82f6)'};border:none;border-radius:8px;padding:8px 14px;color:${isDone?'var(--green)':'#fff'};font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
-        ${isDone?'✓ 완료':'📋 폼 작성'}
-      </button>
+      <div style="font-size:12px;font-weight:700;color:${isDone?'var(--green)':'#a78bfa'};">
+        ${isDone?'완료':'미완료'}
+      </div>
     </div>`;
   }).join('');
 }
