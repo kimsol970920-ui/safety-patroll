@@ -295,23 +295,26 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div id="tabContent-qr" style="display:none;">
       <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span id="qrFloorInfo">오늘 점검 구역의 QR코드를 스캔해주세요.</span></div>
 
-      <!-- 기본 카메라 안내 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;">
-        <div style="font-size:36px;margin-bottom:10px;">📷</div>
-        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">기본 카메라로 QR 스캔</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px;">
-          ① 기기 기본 카메라 앱 열기<br>
-          ② 현장 QR코드에 카메라 갖다 대기<br>
-          ③ 하단에 뜨는 <strong style="color:var(--accent);">링크를 탭</strong>하면 자동 인증
-        </div>
-        <button onclick="openCamera()"
-          style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:12px;padding:14px 28px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
-          📷 카메라 열기
-        </button>
+      <!-- QR 스캐너 -->
+      <div class="qr-box" id="qrScanBox">
+        <div class="qr-icon">📷</div>
+        <div class="qr-title">QR 코드 스캔</div>
+        <div class="qr-sub">각 위치의 QR코드를 스캔하면<br>해당 위치가 자동으로 인증됩니다.</div>
       </div>
+      <div id="qr-video-wrap" style="display:none;">
+        <video id="qr-video" autoplay muted playsinline></video>
+        <div class="qr-overlay">
+          <div class="qr-corner tl"></div>
+          <div class="qr-corner tr"></div>
+          <div class="qr-corner bl"></div>
+          <div class="qr-corner br"></div>
+        </div>
+      </div>
+      <button class="btn btn-qr" id="qrStartBtn" onclick="startQRScan()">📷 QR 스캔 시작</button>
+      <button class="btn btn-ghost" id="qrStopBtn" style="display:none;" onclick="stopQRScan()">■ 스캔 중지</button>
 
       <!-- 완료된 위치 목록 -->
-      <div style="margin-top:4px;">
+      <div style="margin-top:16px;">
         <div class="sec-title">인증 완료 위치</div>
         <div class="qr-badge-list" id="qrDoneList">
           <span style="font-size:12px;color:var(--text2);">아직 인증된 위치가 없습니다.</span>
@@ -619,7 +622,7 @@ function renderM2LocList(){
         </div>
       </div>
       ${!isDone ? `
-      <button onclick="openCamera()"
+      <button onclick="goStep(3);setTimeout(()=>switchTab('qr'),100);"
         style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:8px;padding:8px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
         📷 카메라
       </button>` : `
@@ -730,16 +733,68 @@ function checkStep3Ready(){
 }
 
 // ── QR 스캔 ──────────────────────────────────────────────────────────
-// ── 기본 카메라 열기 ─────────────────────────────────────────────────
-function openCamera(){
-  // iOS/Android 기본 카메라 앱 실행
-  // capture=environment 로 후면 카메라 직접 실행
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.setAttribute('capture', 'environment');
-  input.click();
-  // 파일 선택 없이 닫으면 아무것도 안 함 (카메라 앱에서 QR 스캔 후 링크 탭하면 자동으로 앱으로 돌아옴)
+// ── QR 스캔 ──────────────────────────────────────────────────────────
+async function startQRScan(){
+  try{
+    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const video=document.getElementById('qr-video');
+    video.srcObject=qrStream;
+    document.getElementById('qr-video-wrap').style.display='block';
+    document.getElementById('qrScanBox').style.display='none';
+    document.getElementById('qrStartBtn').style.display='none';
+    document.getElementById('qrStopBtn').style.display='block';
+    video.addEventListener('loadeddata',()=>{ qrAnimFrame=requestAnimationFrame(scanFrame); });
+  }catch(e){
+    alert('카메라 접근 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요.');
+  }
+}
+
+function stopQRScan(){
+  if(qrStream) qrStream.getTracks().forEach(t=>t.stop());
+  if(qrAnimFrame) cancelAnimationFrame(qrAnimFrame);
+  qrStream=null; qrAnimFrame=null;
+  document.getElementById('qr-video-wrap').style.display='none';
+  document.getElementById('qrScanBox').style.display='block';
+  document.getElementById('qrStartBtn').style.display='block';
+  document.getElementById('qrStopBtn').style.display='none';
+}
+
+function scanFrame(){
+  const video=document.getElementById('qr-video');
+  if(video.readyState===video.HAVE_ENOUGH_DATA){
+    const canvas=document.createElement('canvas');
+    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+    canvas.getContext('2d').drawImage(video,0,0);
+    const imgData=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(imgData.data,imgData.width,imgData.height);
+    if(code){
+      stopQRScan();
+      const scanned=code.data.trim();
+
+      // 1) 구글폼 URL 인식 → 해당 위치 찾아서 폼 모달 열기
+      if(scanned.includes('docs.google.com/forms')){
+        const cleanUrl=scanned.split('?')[0];
+        const loc=QR_LOCATIONS.find(l=>l.formUrl && l.formUrl.split('?')[0]===cleanUrl);
+        if(loc){ showFormModal(loc); return; }
+        // 매핑 안 된 구글폼이면 그냥 열기
+        window.open(scanned,'_blank'); return;
+      }
+
+      // 2) ?loc= 파라미터 방식
+      let locId=null;
+      try{ locId=new URL(scanned).searchParams.get('loc'); }catch(_){}
+      if(!locId) locId=scanned;
+      const loc=QR_LOCATIONS.find(l=>l.id===locId);
+      if(!loc){ alert('⚠️ 등록되지 않은 QR코드입니다.'); return; }
+      if(state.todayFloor && loc.floor!==state.todayFloor){
+        const go=confirm(`⚠️ 오늘 점검 구역(${state.todayFloor})이 아닌\n${loc.floor} 위치입니다.\n그래도 진행하시겠습니까?`);
+        if(!go) return;
+      }
+      if(loc.formUrl) showFormModal(loc);
+      else completeQRAuth(loc.id);
+    }
+  }
+  qrAnimFrame=requestAnimationFrame(scanFrame);
 }
 
 function scanFrame(){
