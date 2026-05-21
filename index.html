@@ -638,7 +638,7 @@ function renderM2LocList(){
         </div>
       </div>
       ${!isDone ? `
-      <button onclick="goStep(3);setTimeout(()=>switchTab('qr'),100);"
+      <button onclick="openInlineQRScan('${loc.id}')"
         style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:8px;padding:8px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
         📷 카메라
       </button>` : `
