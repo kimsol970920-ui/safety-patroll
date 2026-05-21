@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>관리감독자 업무 점검</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#f5a623">
 
 <!-- Apple PWA 필수 설정 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="안전점검">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="apple-touch-icon" sizes="72x72" href="icon-72.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-<link rel="apple-touch-startup-image" href="icon-512.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/icon-72.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-startup-image" href="/icon-512.png">
 
 <!-- 모바일 -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -293,28 +293,25 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
     <!-- QR 인증 탭 -->
     <div id="tabContent-qr" style="display:none;">
-      <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span id="qrFloorInfo">오늘 점검 구역의 QR코드를 순서대로 스캔해주세요.</span></div>
+      <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span id="qrFloorInfo">오늘 점검 구역의 QR코드를 스캔해주세요.</span></div>
 
-      <!-- QR 스캐너 -->
-      <div class="qr-box" id="qrScanBox">
-        <div class="qr-icon">📷</div>
-        <div class="qr-title">QR 코드 스캔</div>
-        <div class="qr-sub">각 위치의 QR코드를 스캔하면<br>해당 위치가 자동으로 인증됩니다.</div>
-      </div>
-      <div id="qr-video-wrap" style="display:none;">
-        <video id="qr-video" autoplay muted playsinline></video>
-        <div class="qr-overlay">
-          <div class="qr-corner tl"></div>
-          <div class="qr-corner tr"></div>
-          <div class="qr-corner bl"></div>
-          <div class="qr-corner br"></div>
+      <!-- 기본 카메라 안내 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:36px;margin-bottom:10px;">📷</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">기본 카메라로 QR 스캔</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px;">
+          ① 기기 기본 카메라 앱 열기<br>
+          ② 현장 QR코드에 카메라 갖다 대기<br>
+          ③ 하단에 뜨는 <strong style="color:var(--accent);">링크를 탭</strong>하면 자동 인증
         </div>
+        <button onclick="openCamera()"
+          style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:12px;padding:14px 28px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
+          📷 카메라 열기
+        </button>
       </div>
-      <button class="btn btn-qr" id="qrStartBtn" onclick="startQRScan()">📷 QR 스캔 시작</button>
-      <button class="btn btn-ghost" id="qrStopBtn" style="display:none;" onclick="stopQRScan()">■ 스캔 중지</button>
 
       <!-- 완료된 위치 목록 -->
-      <div style="margin-top:16px;">
+      <div style="margin-top:4px;">
         <div class="sec-title">인증 완료 위치</div>
         <div class="qr-badge-list" id="qrDoneList">
           <span style="font-size:12px;color:var(--text2);">아직 인증된 위치가 없습니다.</span>
@@ -621,9 +618,12 @@ function renderM2LocList(){
           ${isDone?'구글폼 제출 완료':'현장 QR코드를 카메라로 스캔하세요'}
         </div>
       </div>
-      <div style="font-size:12px;font-weight:700;color:${isDone?'var(--green)':'#a78bfa'};">
-        ${isDone?'완료':'미완료'}
-      </div>
+      ${!isDone ? `
+      <button onclick="openCamera()"
+        style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:8px;padding:8px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
+        📷 카메라
+      </button>` : `
+      <div style="font-size:12px;font-weight:700;color:var(--green);">완료</div>`}
     </div>`;
   }).join('');
 }
@@ -730,29 +730,16 @@ function checkStep3Ready(){
 }
 
 // ── QR 스캔 ──────────────────────────────────────────────────────────
-async function startQRScan(){
-  try{
-    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    const video=document.getElementById('qr-video');
-    video.srcObject=qrStream;
-    document.getElementById('qr-video-wrap').style.display='block';
-    document.getElementById('qrScanBox').style.display='none';
-    document.getElementById('qrStartBtn').style.display='none';
-    document.getElementById('qrStopBtn').style.display='block';
-    video.addEventListener('loadeddata',()=>{ qrAnimFrame=requestAnimationFrame(scanFrame); });
-  }catch(e){
-    alert('카메라 접근 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요.');
-  }
-}
-
-function stopQRScan(){
-  if(qrStream) qrStream.getTracks().forEach(t=>t.stop());
-  if(qrAnimFrame) cancelAnimationFrame(qrAnimFrame);
-  qrStream=null; qrAnimFrame=null;
-  document.getElementById('qr-video-wrap').style.display='none';
-  document.getElementById('qrScanBox').style.display='block';
-  document.getElementById('qrStartBtn').style.display='block';
-  document.getElementById('qrStopBtn').style.display='none';
+// ── 기본 카메라 열기 ─────────────────────────────────────────────────
+function openCamera(){
+  // iOS/Android 기본 카메라 앱 실행
+  // capture=environment 로 후면 카메라 직접 실행
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.setAttribute('capture', 'environment');
+  input.click();
+  // 파일 선택 없이 닫으면 아무것도 안 함 (카메라 앱에서 QR 스캔 후 링크 탭하면 자동으로 앱으로 돌아옴)
 }
 
 function scanFrame(){
@@ -976,16 +963,7 @@ function showResult(okC,partC,ngC,naC,emails,success){
 }
 
 // ── 리마인더 ─────────────────────────────────────────────────────────
-function startReminder(){
-  stopReminder();
-  reminderTimer=setInterval(()=>{
-    if(state.submitted) return;
-    const allItems=[...COMMON_ITEMS,...(TURN_ITEMS[state.turn]||[])];
-    const remain=allItems.filter(i=>!state.checks[i.id]).length;
-    if(remain>0) alert(`⚠️ 점검 미완료\n\n아직 ${remain}개 항목이 체크되지 않았습니다.`);
-    else confirm('✅ 모든 항목 완료!\n\n결과를 제출하시겠습니까?')&&goStep(4);
-  },30000);
-}
+function startReminder(){ stopReminder(); }
 function stopReminder(){if(reminderTimer){clearInterval(reminderTimer);reminderTimer=null;}}
 window.addEventListener('beforeunload',e=>{if(state.turn&&!state.submitted){e.preventDefault();e.returnValue='점검이 완료되지 않았습니다.';}});
 
@@ -1009,7 +987,7 @@ function resetAll(){
 let swReg=null;
 async function initPWA(){
   if('serviceWorker' in navigator){
-    try{ swReg=await navigator.serviceWorker.register('service-worker.js'); }catch(e){}
+    try{ swReg=await navigator.serviceWorker.register('/service-worker.js', {scope: '/'}); }catch(e){ console.warn('SW 등록 실패:',e); }
   }
   if('Notification' in window){
     if(Notification.permission==='default'){
