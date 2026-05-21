@@ -252,15 +252,52 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   <div class="card">
     <div class="card-label">STEP 03 / 06</div>
     <div class="card-title">공통 안전 점검</div>
-    <div class="legend">
-      <div class="leg-item"><div class="leg-dot" style="background:rgba(34,197,94,0.2);color:var(--green);border:1.5px solid var(--green);">○</div>양호</div>
-      <div class="leg-item"><div class="leg-dot" style="background:rgba(245,158,11,0.2);color:var(--yellow);border:1.5px solid var(--yellow);">△</div>보완</div>
-      <div class="leg-item"><div class="leg-dot" style="background:rgba(239,68,68,0.2);color:var(--red);border:1.5px solid var(--red);">X</div>불량</div>
-      <div class="leg-item"><div class="leg-dot" style="background:rgba(100,116,139,0.2);color:#94a3b8;border:1.5px solid #64748b;">-</div>해당없음</div>
+
+    <!-- 탭 -->
+    <div class="tab-wrap">
+      <button class="tab-btn active" id="tab2-checklist" onclick="switchTab2('checklist')">📋 공통 점검</button>
+      <button class="tab-btn" id="tab2-qr" onclick="switchTab2('qr')">📷 중2층 QR 인증</button>
     </div>
-    <div class="prog-text" id="prog2Text">0 / 13 항목 완료</div>
-    <div class="prog-wrap"><div class="prog-fill" id="prog2Bar" style="width:0%"></div></div>
-    <div id="commonList"></div>
+
+    <!-- 공통 점검 탭 -->
+    <div id="tab2Content-checklist">
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(34,197,94,0.2);color:var(--green);border:1.5px solid var(--green);">○</div>양호</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(245,158,11,0.2);color:var(--yellow);border:1.5px solid var(--yellow);">△</div>보완</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(239,68,68,0.2);color:var(--red);border:1.5px solid var(--red);">X</div>불량</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(100,116,139,0.2);color:#94a3b8;border:1.5px solid #64748b;">-</div>해당없음</div>
+      </div>
+      <div class="prog-text" id="prog2Text">0 / 13 항목 완료</div>
+      <div class="prog-wrap"><div class="prog-fill" id="prog2Bar" style="width:0%"></div></div>
+      <div id="commonList"></div>
+    </div>
+
+    <!-- 중2층 QR 탭 -->
+    <div id="tab2Content-qr" style="display:none;">
+      <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span>중2층 각 위치의 QR코드를 스캔하고 구글폼을 작성해주세요.</span></div>
+      <div id="m2LocList"></div>
+
+      <!-- QR 스캐너 -->
+      <div class="qr-box" id="qrScanBox2" style="margin-top:14px;">
+        <div class="qr-icon">📷</div>
+        <div class="qr-title">QR 스캔 시작</div>
+        <div class="qr-sub">아래 버튼을 눌러 카메라로<br>QR코드를 스캔하세요.</div>
+      </div>
+      <div id="qr-video-wrap2" style="display:none;">
+        <video id="qr-video2" autoplay muted playsinline style="width:100%;border-radius:12px;display:block;"></video>
+      </div>
+      <button class="btn btn-qr" id="qrStartBtn2" onclick="startInlineQRScan2()">📷 QR 스캔 시작</button>
+      <button class="btn btn-ghost" id="qrStopBtn2" style="display:none;" onclick="stopInlineQRScan2()">■ 스캔 중지</button>
+
+      <!-- 완료 목록 -->
+      <div style="margin-top:16px;">
+        <div class="sec-title">인증 완료 위치</div>
+        <div class="qr-badge-list" id="m2DoneList">
+          <span style="font-size:12px;color:var(--text2);">아직 인증된 위치가 없습니다.</span>
+        </div>
+      </div>
+    </div>
+
     <button class="btn btn-ghost" onclick="goStep(1)">← 이전</button>
     <button class="btn btn-primary" id="step2Next" onclick="goStep(3)" disabled>교대별 점검 →</button>
   </div>
@@ -604,21 +641,6 @@ function renderCommonList(){
   const container=document.getElementById('commonList');
   container.innerHTML='';
   COMMON_ITEMS.forEach(item=>container.appendChild(makeItem(item,'common')));
-
-  // 항상 중2층 QR 인증 섹션 표시 (매 조 공통)
-  const m2Locs=QR_LOCATIONS.filter(l=>l.floor==='중2층');
-  const qrSec=document.createElement('div');
-  qrSec.id='commonQRSection';
-  qrSec.innerHTML=`
-    <div class="sec-title" style="color:#a78bfa;margin-top:20px;">중2층 QR 인증 (구글폼 작성 필요)</div>
-    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:12px;padding:14px 16px;margin-bottom:10px;font-size:13px;color:#c4b5fd;line-height:1.7;">
-      📷 각 위치에 부착된 <strong>QR코드를 카메라로 스캔</strong>하세요.<br>
-      <span style="font-size:12px;opacity:0.8;">스캔하면 구글폼이 자동으로 열립니다. 폼 작성 후 제출하고 돌아오세요.</span>
-    </div>
-    <div id="m2LocList"></div>
-  `;
-  container.appendChild(qrSec);
-  renderM2LocList();
   updateCommonProgress();
 }
 
@@ -634,17 +656,19 @@ function renderM2LocList(){
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:600;color:${isDone?'var(--green)':'var(--text)'};">${loc.name}</div>
         <div style="font-size:11px;color:${isDone?'var(--green)':'var(--text2)'};">
-          ${isDone?'구글폼 제출 완료':'현장 QR코드를 카메라로 스캔하세요'}
+          ${isDone?'구글폼 제출 완료':'QR 스캔 후 구글폼 작성'}
         </div>
       </div>
-      ${!isDone ? `
-      <button onclick="openInlineQRScan('${loc.id}')"
-        style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:8px;padding:8px 14px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
-        📷 카메라
-      </button>` : `
-      <div style="font-size:12px;font-weight:700;color:var(--green);">완료</div>`}
+      ${isDone
+        ? `<div style="font-size:12px;font-weight:700;color:var(--green);">완료</div>`
+        : `<button onclick="showFormModal(QR_LOCATIONS.find(l=>l.id==='${loc.id}'))"
+            style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
+            📋 폼 작성
+          </button>`
+      }
     </div>`;
   }).join('');
+  renderM2DoneList();
 }
 
 function updateCommonProgress(){
@@ -652,14 +676,7 @@ function updateCommonProgress(){
   const total=COMMON_ITEMS.length;
   document.getElementById('prog2Text').textContent=`${done} / ${total} 항목 완료`;
   document.getElementById('prog2Bar').style.width=(done/total*100)+'%';
-
-  // 중2층 QR 3곳 모두 폼 제출 완료해야 다음 가능 (매 조 공통)
-  const m2Locs=QR_LOCATIONS.filter(l=>l.floor==='중2층');
-  const m2Done=m2Locs.every(l=>state.qrFormDone.has(l.id));
-  document.getElementById('step2Next').disabled=!(done>=total && m2Done);
-
-  // 중2층 위치 목록 새로고침
-  renderM2LocList();
+  document.getElementById('step2Next').disabled=done<total;
 }
 
 // ── 교대별 체크리스트 렌더링 ─────────────────────────────────────────
@@ -748,8 +765,184 @@ function checkStep3Ready(){
   document.getElementById('step3Next').disabled=!(turnDone&&qrDone);
 }
 
-// ── QR 스캔 ──────────────────────────────────────────────────────────
-// ── QR 스캔 ──────────────────────────────────────────────────────────
+// ── STEP 2 탭 전환 ───────────────────────────────────────────────────
+function switchTab2(tab){
+  ['checklist','qr'].forEach(t=>{
+    document.getElementById('tab2-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab2Content-'+t).style.display = t===tab?'block':'none';
+  });
+  if(tab==='qr') renderM2LocList();
+  if(tab!=='qr') stopInlineQRScan2();
+  updateCommonProgress();
+}
+let inlineStream2 = null;
+let inlineFrame2 = null;
+
+async function startInlineQRScan2(){
+  try{
+    inlineStream2 = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const video = document.getElementById('qr-video2');
+    video.srcObject = inlineStream2;
+    document.getElementById('qr-video-wrap2').style.display='block';
+    document.getElementById('qrScanBox2').style.display='none';
+    document.getElementById('qrStartBtn2').style.display='none';
+    document.getElementById('qrStopBtn2').style.display='block';
+    video.addEventListener('loadeddata', ()=>{ inlineFrame2=requestAnimationFrame(scanInlineFrame2); });
+  }catch(e){
+    alert('카메라 접근 권한이 필요합니다.');
+  }
+}
+
+function stopInlineQRScan2(){
+  if(inlineStream2) inlineStream2.getTracks().forEach(t=>t.stop());
+  if(inlineFrame2) cancelAnimationFrame(inlineFrame2);
+  inlineStream2=null; inlineFrame2=null;
+  const wrap=document.getElementById('qr-video-wrap2');
+  const box=document.getElementById('qrScanBox2');
+  const startBtn=document.getElementById('qrStartBtn2');
+  const stopBtn=document.getElementById('qrStopBtn2');
+  if(wrap) wrap.style.display='none';
+  if(box) box.style.display='block';
+  if(startBtn) startBtn.style.display='block';
+  if(stopBtn) stopBtn.style.display='none';
+}
+
+function scanInlineFrame2(){
+  const video = document.getElementById('qr-video2');
+  if(!video){ stopInlineQRScan2(); return; }
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    const canvas = document.createElement('canvas');
+    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'dontInvert'});
+    if(code){
+      stopInlineQRScan2();
+      const scanned=code.data.trim();
+      // 구글폼 URL 인식
+      if(scanned.includes('docs.google.com/forms')){
+        const cleanUrl=scanned.split('?')[0];
+        const matched=QR_LOCATIONS.find(l=>l.formUrl && l.formUrl.split('?')[0]===cleanUrl);
+        if(matched){ showFormModal(matched); return; }
+        window.open(scanned,'_blank'); return;
+      }
+      // loc ID 방식
+      let locId=null;
+      try{ locId=new URL(scanned).searchParams.get('loc'); }catch(_){}
+      if(!locId) locId=scanned;
+      const found=QR_LOCATIONS.find(l=>l.id===locId);
+      if(found) completeQRAuth(found.id);
+      else alert('⚠️ 등록되지 않은 QR코드입니다.');
+      return;
+    }
+  }
+  inlineFrame2=requestAnimationFrame(scanInlineFrame2);
+}
+
+// m2DoneList 업데이트
+function renderM2DoneList(){
+  const el=document.getElementById('m2DoneList');
+  if(!el) return;
+  const m2Locs=QR_LOCATIONS.filter(l=>l.floor==='중2층');
+  const doneList=m2Locs.filter(l=>state.qrFormDone.has(l.id));
+  if(doneList.length===0){
+    el.innerHTML='<span style="font-size:12px;color:var(--text2);">아직 인증된 위치가 없습니다.</span>';
+  } else {
+    el.innerHTML=doneList.map(l=>`<div class="qr-badge">✓ ${l.name}</div>`).join('');
+  }
+}
+let inlineStream = null;
+let inlineFrame = null;
+
+function openInlineQRScan(locId){
+  const loc = QR_LOCATIONS.find(l => l.id === locId);
+  if(!loc) return;
+  const old = document.getElementById('inlineQRModal');
+  if(old) old.remove();
+  const modal = document.createElement('div');
+  modal.id = 'inlineQRModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;display:flex;align-items:flex-end;';
+  modal.innerHTML = `
+    <div style="background:#111418;border-radius:20px 20px 0 0;padding:20px 20px 36px;width:100%;border-top:1px solid #2a3340;">
+      <div style="width:40px;height:4px;background:#2a3340;border-radius:2px;margin:0 auto 16px;"></div>
+      <div style="font-size:10px;color:#a78bfa;font-weight:700;letter-spacing:1.5px;margin-bottom:6px;font-family:'JetBrains Mono',monospace;">중2층 QR 인증</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:4px;">📍 ${loc.name}</div>
+      <div style="font-size:12px;color:#8fa0b0;margin-bottom:14px;">QR코드를 카메라에 비춰주세요</div>
+      <div style="position:relative;width:100%;max-width:320px;margin:0 auto 14px;">
+        <video id="inlineQRVideo" autoplay muted playsinline style="width:100%;border-radius:12px;display:block;"></video>
+        <div style="position:absolute;inset:0;border-radius:12px;border:2px solid #a78bfa;pointer-events:none;">
+          <div style="position:absolute;top:8px;left:8px;width:20px;height:20px;border-top:3px solid #a78bfa;border-left:3px solid #a78bfa;"></div>
+          <div style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-top:3px solid #a78bfa;border-right:3px solid #a78bfa;"></div>
+          <div style="position:absolute;bottom:8px;left:8px;width:20px;height:20px;border-bottom:3px solid #a78bfa;border-left:3px solid #a78bfa;"></div>
+          <div style="position:absolute;bottom:8px;right:8px;width:20px;height:20px;border-bottom:3px solid #a78bfa;border-right:3px solid #a78bfa;"></div>
+        </div>
+      </div>
+      <div id="inlineQRStatus" style="text-align:center;font-size:13px;color:#8fa0b0;margin-bottom:14px;">스캔 중...</div>
+      <button onclick="closeInlineQRScan()"
+        style="width:100%;background:transparent;border:1px solid #2a3340;border-radius:12px;padding:12px;color:#8fa0b0;font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
+        취소
+      </button>
+    </div>`;
+  document.body.appendChild(modal);
+  startInlineCamera(loc);
+}
+
+async function startInlineCamera(loc){
+  try{
+    inlineStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const video = document.getElementById('inlineQRVideo');
+    if(!video) return;
+    video.srcObject = inlineStream;
+    video.addEventListener('loadeddata', () => {
+      inlineFrame = requestAnimationFrame(() => scanInlineFrame(loc));
+    });
+  }catch(e){
+    const s = document.getElementById('inlineQRStatus');
+    if(s) s.textContent = '카메라 권한이 필요합니다.';
+  }
+}
+
+function scanInlineFrame(loc){
+  const video = document.getElementById('inlineQRVideo');
+  if(!video){ closeInlineQRScan(); return; }
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    const _ctx2=canvas.getContext("2d"); _ctx2.drawImage(video,0,0,canvas.width,canvas.height);
+    const imgData=_ctx2.getImageData(0,0,canvas.width,canvas.height);
+    const code = jsQR(imgData.data, imgData.width, imgData.height);
+    if(code){
+      closeInlineQRScan();
+      const scanned = code.data.trim();
+      if(scanned.includes('docs.google.com/forms')){
+        const cleanUrl = scanned.split('?')[0];
+        const matched = QR_LOCATIONS.find(l => l.formUrl && l.formUrl.split('?')[0] === cleanUrl);
+        if(matched) showFormModal(matched);
+        else window.open(scanned, '_blank');
+        return;
+      }
+      let locId = null;
+      try{ locId = new URL(scanned).searchParams.get('loc'); }catch(_){}
+      if(!locId) locId = scanned;
+      const found = QR_LOCATIONS.find(l => l.id === locId);
+      if(found) completeQRAuth(found.id);
+      else alert('⚠️ 등록되지 않은 QR코드입니다.');
+      return;
+    }
+  }
+  inlineFrame = requestAnimationFrame(() => scanInlineFrame(loc));
+}
+
+function closeInlineQRScan(){
+  if(inlineStream) inlineStream.getTracks().forEach(t => t.stop());
+  if(inlineFrame) cancelAnimationFrame(inlineFrame);
+  inlineStream = null; inlineFrame = null;
+  const modal = document.getElementById('inlineQRModal');
+  if(modal) modal.remove();
+}
+
+// ── QR 스캔 (STEP 3 탭용) ────────────────────────────────────────────
 async function startQRScan(){
   try{
     qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
@@ -780,9 +973,9 @@ function scanFrame(){
   if(video.readyState===video.HAVE_ENOUGH_DATA){
     const canvas=document.createElement('canvas');
     canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-    canvas.getContext('2d').drawImage(video,0,0);
-    const imgData=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
-    const code=jsQR(imgData.data,imgData.width,imgData.height);
+    const _ctx=canvas.getContext("2d"); _ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const imgData=_ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:"dontInvert"});
     if(code){
       stopQRScan();
       const scanned=code.data.trim();
@@ -902,9 +1095,10 @@ function completeQRAuth(locId){
   const loc=QR_LOCATIONS.find(l=>l.id===locId);
   state.qrDone.add(locId);
   if(loc && loc.formUrl) state.qrFormDone.add(locId);
-  // 중2층 폼이면 공통 점검 진행상태 업데이트
   if(loc && loc.formUrl) updateCommonProgress();
   renderQRTab();
+  renderM2LocList();
+  renderM2DoneList();
   checkStep3Ready();
   const toast=document.createElement('div');
   toast.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 24px;border-radius:20px;font-size:14px;font-weight:700;z-index:400;font-family:"Noto Sans KR",sans-serif;white-space:nowrap;';
