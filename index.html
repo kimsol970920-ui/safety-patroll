@@ -199,6 +199,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <div class="b-icon">📍</div>
         <div class="b-title">현장 외부 접근 불가</div>
         <div class="b-sub">현재 위치가 공장 현장을 벗어났습니다.<br>현장에서만 점검을 진행할 수 있습니다.</div>
+        <div id="distanceInfo" style="margin-top:12px;background:rgba(239,68,68,0.15);border-radius:8px;padding:8px 16px;display:inline-block;">
+          <span style="font-size:13px;font-weight:700;color:#fca5a5;">현장까지 거리: </span>
+          <span id="distanceValue" style="font-size:18px;font-weight:900;color:#ef4444;">--</span>
+          <span style="font-size:13px;font-weight:700;color:#fca5a5;">m</span>
+        </div>
       </div>
     </div>
     <div class="opt-grid c4" id="shiftGrid">
@@ -361,7 +366,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyx1UNeXi_U__DUMApuSLANUODE1TORnX3C3PCQE9l0ND_-ZQiGV15fbROew68eyekU/exec';
 const SITE_LAT = 36.4515444;
 const SITE_LNG = 127.4127681;
-const SITE_RADIUS_M = 300;
+const SITE_RADIUS_M = 500;
 
 const EMAIL_MAP = {
   'A':['19573091@hankookn.com','kimsol@hankookn.com','milal11@hankookn.com'],
@@ -502,9 +507,14 @@ function startGPS(){
     state.gpsLat=p.coords.latitude.toFixed(6);
     state.gpsLng=p.coords.longitude.toFixed(6);
     state.gpsAccuracy=Math.round(p.coords.accuracy);
-    const dist=calcDistance(p.coords.latitude,p.coords.longitude,SITE_LAT,SITE_LNG);
+    const dist=Math.round(calcDistance(p.coords.latitude,p.coords.longitude,SITE_LAT,SITE_LNG));
     state.gpsOk=dist<=SITE_RADIUS_M;
     document.getElementById('locationBlock').style.display=state.gpsOk?'none':'block';
+    if(!state.gpsOk){
+      // 현장까지 남은 거리 (현재 거리 - 허용 반경)
+      const over=dist-SITE_RADIUS_M;
+      document.getElementById('distanceValue').textContent=over.toLocaleString();
+    }
     chkStep0();
   },()=>{state.gpsLat='N/A';state.gpsLng='N/A';state.gpsOk=true;chkStep0();},
   {enableHighAccuracy:true,timeout:10000,maximumAge:0});
