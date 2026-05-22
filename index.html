@@ -680,13 +680,8 @@ function renderM2LocList(){
 function onLocScanned(locId, scanned){
   stopLocScan(locId);
   if(scanned.includes('docs.google.com/forms')){
-    window.open(scanned, '_blank');
-    const toast=document.createElement('div');
-    toast.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:400;font-family:"Noto Sans KR",sans-serif;text-align:center;';
-    toast.innerHTML='구글폼이 열렸습니다!<br>작성 후 ✅ 폼 제출 완료를 눌러주세요.';
-    document.body.appendChild(toast);
-    setTimeout(()=>toast.remove(), 4000);
-    renderM2LocList(); // UI 초기화
+    // 팝업 없이 바로 구글폼으로 이동
+    window.location.href = scanned;
     return;
   }
   let lid=null;
@@ -1195,36 +1190,9 @@ function scanFrame(){
 
 // ── 중2층: 구글폼 모달 ───────────────────────────────────────────────
 function showFormModal(loc){
-  const old=document.getElementById('formModal');
-  if(old) old.remove();
-  const modal=document.createElement('div');
-  modal.id='formModal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:300;display:flex;align-items:flex-end;';
-  modal.innerHTML=`
-    <div style="background:#111418;border-radius:20px 20px 0 0;padding:24px 24px 36px;width:100%;border-top:1px solid #2a3340;animation:fadeUp 0.3s ease;">
-      <div style="width:40px;height:4px;background:#2a3340;border-radius:2px;margin:0 auto 20px;"></div>
-      <div style="font-size:10px;color:#a78bfa;font-weight:700;letter-spacing:1.5px;margin-bottom:6px;font-family:'JetBrains Mono',monospace;">중2층 QR 인증</div>
-      <div style="font-size:18px;font-weight:700;margin-bottom:4px;">📍 ${loc.name}</div>
-      <div style="font-size:13px;color:#8fa0b0;margin-bottom:18px;">중2층 · 구글폼 작성 필요</div>
-      <div style="background:#181d24;border:1px solid #2a3340;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#e8edf2;line-height:1.7;">
-        ① 아래 버튼으로 <strong>구글폼 작성 및 제출</strong><br>
-        <span style="color:#8fa0b0;font-size:12px;">② 제출 완료 후 이 화면으로 돌아오세요</span><br>
-        <span style="color:#8fa0b0;font-size:12px;">③ 인증 완료 버튼을 눌러 점검을 계속하세요</span>
-      </div>
-      <button onclick="window.open('${loc.formUrl}','_blank')"
-        style="width:100%;background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:12px;padding:15px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:10px;">
-        📋 구글폼 작성하기
-      </button>
-      <button onclick="completeQRAuth('${loc.id}');document.getElementById('formModal').remove();"
-        style="width:100%;background:linear-gradient(135deg,#f5a623,#e8431a);border:none;border-radius:12px;padding:15px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:10px;">
-        ✅ 폼 제출 완료 — 인증 완료
-      </button>
-      <button onclick="document.getElementById('formModal').remove()"
-        style="width:100%;background:transparent;border:1px solid #2a3340;border-radius:12px;padding:12px;color:#8fa0b0;font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">
-        취소
-      </button>
-    </div>`;
-  document.body.appendChild(modal);
+  if(loc && loc.formUrl){
+    window.location.href = loc.formUrl;
+  }
 }
 
 // ── 위치 인증 완료 공통 처리 ──────────────────────────────────────────
