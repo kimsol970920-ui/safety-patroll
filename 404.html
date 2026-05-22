@@ -679,23 +679,21 @@ function renderM2LocList(){
 }
 function onLocScanned(locId, scanned){
   stopLocScan(locId);
-  // 구글폼 URL → 새 탭으로 열고 완료 버튼 안내
   if(scanned.includes('docs.google.com/forms')){
     window.open(scanned, '_blank');
-    // 폼 열렸음을 알리는 토스트
     const toast=document.createElement('div');
     toast.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:400;font-family:"Noto Sans KR",sans-serif;text-align:center;';
     toast.innerHTML='구글폼이 열렸습니다!<br>작성 후 ✅ 폼 제출 완료를 눌러주세요.';
     document.body.appendChild(toast);
     setTimeout(()=>toast.remove(), 4000);
+    renderM2LocList(); // UI 초기화
     return;
   }
-  // 일반 위치 QR
   let lid=null;
   try{ lid=new URL(scanned).searchParams.get('loc'); }catch(_){}
   if(!lid) lid=scanned;
   const found=QR_LOCATIONS.find(l=>l.id===lid);
-  if(found) completeQRAuth(found.id);
+  if(found){ completeQRAuth(found.id); renderM2LocList(); }
   else alert('⚠️ 등록되지 않은 QR코드입니다.');
 }
 
@@ -825,6 +823,8 @@ async function startLocScan(locId){
   for(const id in locScanners){
     if(id !== locId) await stopLocScan(id);
   }
+  renderM2LocList(); // 다른 위치 카메라 뷰 닫힘 반영
+  // reader div 다시 찾기 (renderM2LocList 후 새로 생성됨)
   const readerEl = document.getElementById('reader-'+locId);
   const startBtn = document.getElementById('startBtn-'+locId);
   const stopBtn  = document.getElementById('stopBtn-'+locId);
