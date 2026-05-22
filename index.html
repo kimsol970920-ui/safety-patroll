@@ -360,10 +360,6 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div class="card-title">부적합 사항 및 최종 확인</div>
     <div id="ngSection"></div>
     <div id="summaryContent"></div>
-    <div style="margin-top:14px;">
-      <div class="card-label">수신 이메일</div>
-      <div id="emailList" style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace;line-height:2;"></div>
-    </div>
     <button class="btn btn-ghost" onclick="goStep(3)">← 수정</button>
     <button class="btn btn-primary" onclick="submitResult()">📤 점검 결과 제출</button>
   </div>
@@ -454,11 +450,20 @@ const QR_LOCATIONS = [
   {id:'1F_10', floor:'1층',   name:'10호기 롤러다이 판넬 옆',       formUrl:null},
   {id:'1F_12', floor:'1층',   name:'12호기 위그웨그 판넬 앞',       formUrl:null},
   {id:'M2_06', floor:'중2층', name:'6호기 계단',
-    formUrl:'https://docs.google.com/forms/d/e/1FAIpQLSfnH2bVN9GPczvCQjDhuQPEmNcj-D_jO0Mu_imcrPNq-H9-wQ/viewform'},
+    formUrl:'https://docs.google.com/forms/d/e/1FAIpQLSf94f6yrUw_4K_ERDE8iF7VBYmOkaEmmHTCrjjCPGlN5ShDqw/viewform'},
   {id:'M2_09', floor:'중2층', name:'9호기 계단',
     formUrl:'https://docs.google.com/forms/d/e/1FAIpQLSe5sHy4HEZ-nisnfCL0dQ-AFrAMGuAxjHl6mmXM1VF3Yrp1MQ/viewform'},
   {id:'M2_11', floor:'중2층', name:'11호기 계단',
     formUrl:'https://docs.google.com/forms/d/e/1FAIpQLSfnH2bVN9GPczvCQjDhuQPEmNcj-D_jO0Mu_imcrPNq-H9-wQ/viewform'},
+  {id:'2F_06', floor:'2층',   name:'6호기 위그웨그 판넬 옆',        formUrl:null},
+  {id:'2F_09', floor:'2층',   name:'9호기 약품실 앞',               formUrl:null},
+  {id:'2F_13', floor:'2층',   name:'13호기 위그웨그 앞',            formUrl:null},
+  {id:'2F_MW', floor:'2층',   name:'마이크로웨이브 4호기 측면',      formUrl:null},
+  {id:'3F_03', floor:'3층',   name:'3호기 빅케미칼 투입구',          formUrl:null},
+  {id:'3F_06', floor:'3층',   name:'6호기 레진 투입구 앞',           formUrl:null},
+  {id:'3F_10', floor:'3층',   name:'10호기 스몰케미칼 투입구 옆',    formUrl:null},
+  {id:'3F_13', floor:'3층',   name:'13호기 스몰케미칼 투입구 옆',    formUrl:null},
+];
   {id:'2F_06', floor:'2층',   name:'6호기 위그웨그 판넬 옆',        formUrl:null},
   {id:'2F_09', floor:'2층',   name:'9호기 약품실 앞',               formUrl:null},
   {id:'2F_13', floor:'2층',   name:'13호기 위그웨그 앞',            formUrl:null},
@@ -1298,7 +1303,10 @@ function completeQRAuth(locId){
 // ── 요약 렌더링 ──────────────────────────────────────────────────────
 function renderSummary(){
   state.memo=document.getElementById('memoEtc').value;
-  state.timestamp=new Date().toLocaleString('ko-KR');
+  const now = new Date();
+  const pad = n=>String(n).padStart(2,'0');
+  state.timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  state.timestampDate = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
   const tLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
 
   const allItems=[...COMMON_ITEMS,...(TURN_ITEMS[state.turn]||[])];
@@ -1378,7 +1386,9 @@ async function submitResult(){
   }).join('\n');
 
   const payload={
-    timestamp:state.timestamp, shift:state.shift, turn:tLabel,
+    timestamp:state.timestamp,
+    date:state.timestampDate,
+    shift:state.shift, turn:tLabel,
     floor:state.todayFloor, qrLocations:qrList||'없음',
     gps:`${state.gpsLat}, ${state.gpsLng}`, accuracy:state.gpsAccuracy||'N/A',
     ok:okC, partial:partC, ng:ngC, na:naC,
@@ -1450,8 +1460,10 @@ function renderDashboard(data, start, end){
   const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','-').slice(0,-1);
 
   // ① 오늘 참여조
-  const todayStr = new Date().toISOString().slice(0,10); // YYYY-MM-DD
-  const todayRows = rows.filter(r=>r.date && r.date.startsWith(todayStr.slice(0,10).replace(/-/g,'-')));
+  const now2 = new Date();
+  const pad2 = n=>String(n).padStart(2,'0');
+  const todayStr = `${now2.getFullYear()}-${pad2(now2.getMonth()+1)}-${pad2(now2.getDate())}`;
+  const todayRows = rows.filter(r=>r.date && r.date.startsWith(todayStr));
   const todayShifts = [...new Set(todayRows.map(r=>r.shift))].filter(Boolean);
   const shiftEl = document.getElementById('dashTodayShift');
   if(todayShifts.length===0){
