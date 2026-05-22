@@ -1455,19 +1455,25 @@ function renderDashboard(data, start, end){
   const pad2 = n=>String(n).padStart(2,'0');
   const todayStr = `${now2.getFullYear()}-${pad2(now2.getMonth()+1)}-${pad2(now2.getDate())}`;
   const todayRows = rows.filter(r=>r.date && r.date.startsWith(todayStr));
-  const todayShifts = [...new Set(todayRows.map(r=>r.shift))].filter(Boolean);
+  const todayShifts = [...new Set(todayRows.map(r=>r.shift ? r.shift.replace('조','').trim() : ''))].filter(Boolean);
   const shiftEl = document.getElementById('dashTodayShift');
   if(todayShifts.length===0){
     shiftEl.innerHTML='<div style="font-size:13px;color:var(--text2);padding:12px;background:var(--surface2);border-radius:10px;">오늘 점검 기록 없음</div>';
   } else {
     shiftEl.innerHTML=todayShifts.map(s=>`
-      <div style="display:inline-block;background:rgba(245,166,35,0.15);border:1px solid var(--accent);border-radius:20px;padding:6px 16px;margin:4px;font-size:14px;font-weight:700;color:var(--accent);">${s}</div>
+      <div style="display:inline-block;background:rgba(245,166,35,0.15);border:1px solid var(--accent);border-radius:20px;padding:6px 16px;margin:4px;font-size:14px;font-weight:700;color:var(--accent);">${s}조</div>
     `).join('');
   }
 
   // ② 조별 참여 횟수
   const shiftCount = {A:0,B:0,C:0,D:0};
-  rows.forEach(r=>{ if(r.shift && shiftCount[r.shift]!==undefined) shiftCount[r.shift]++; });
+  rows.forEach(r=>{
+    if(r.shift){
+      // "A조" 또는 "A" 모두 처리
+      const key = r.shift.replace('조','').trim().toUpperCase();
+      if(shiftCount[key] !== undefined) shiftCount[key]++;
+    }
+  });
   const total = rows.length;
   document.getElementById('dashShiftCount').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
