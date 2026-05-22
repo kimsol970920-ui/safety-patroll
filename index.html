@@ -723,10 +723,14 @@ function updateCommonProgress(){
 // ── 교대별 체크리스트 렌더링 ─────────────────────────────────────────
 function renderTurnList(){
   const tLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||'';
-  document.getElementById('step3Title').textContent=`${tLabel} 점검 + QR 인증`;
-  document.getElementById('qrFloorInfo').textContent=`오늘 점검 구역(${state.todayFloor})의 QR코드를 스캔해주세요.`;
+  const titleEl = document.getElementById('step3Title');
+  if(titleEl) titleEl.textContent=`${tLabel} 점검 + QR 인증`;
+
+  const floorInfoEl = document.getElementById('qrFloorInfo');
+  if(floorInfoEl) floorInfoEl.textContent=`오늘 점검 구역(${state.todayFloor||'미정'})의 QR코드를 스캔해주세요.`;
 
   const container=document.getElementById('turnList');
+  if(!container) return;
   container.innerHTML='';
   const items=TURN_ITEMS[state.turn]||[];
   items.forEach(item=>container.appendChild(makeItem(item,'turn')));
@@ -738,9 +742,8 @@ function renderTurnList(){
 function renderQRTab(){
   const locs=getFloorLocations(state.todayFloor||'1층');
 
-  // 위치 목록
   const listEl=document.getElementById('qrLocationList');
-  listEl.innerHTML=locs.map(l=>{
+  if(listEl) listEl.innerHTML=locs.map(l=>{
     const done=state.qrDone.has(l.id);
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid ${done?'var(--green)':'var(--border)'};border-radius:10px;margin-bottom:6px;">
       <span style="font-size:18px;">${done?'✅':'⬜'}</span>
@@ -751,8 +754,8 @@ function renderQRTab(){
     </div>`;
   }).join('');
 
-  // 완료 뱃지
   const badgeEl=document.getElementById('qrDoneList');
+  if(!badgeEl) return;
   if(state.qrDone.size===0){
     badgeEl.innerHTML='<span style="font-size:12px;color:var(--text2);">아직 인증된 위치가 없습니다.</span>';
   } else {
