@@ -279,23 +279,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
     <!-- 중2층 QR 탭 -->
     <div id="tab2Content-qr" style="display:none;">
-      <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span>각 위치의 QR코드를 스캔하면 구글폼이 자동으로 열립니다.</span></div>
-      <div id="m2LocList"></div>
 
-      <!-- 카메라 뷰 (위치 선택 시 표시) -->
-      <div id="m2CameraWrap" style="display:none;margin-top:14px;">
-        <div style="font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:8px;" id="m2CameraLabel">📷 스캔 중...</div>
-        <div style="position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000;">
-          <video id="qr-video2" autoplay muted playsinline style="width:100%;display:block;border-radius:12px;"></video>
-          <div style="position:absolute;inset:0;pointer-events:none;">
-            <div style="position:absolute;top:10px;left:10px;width:24px;height:24px;border-top:3px solid #a78bfa;border-left:3px solid #a78bfa;border-radius:2px;"></div>
-            <div style="position:absolute;top:10px;right:10px;width:24px;height:24px;border-top:3px solid #a78bfa;border-right:3px solid #a78bfa;border-radius:2px;"></div>
-            <div style="position:absolute;bottom:10px;left:10px;width:24px;height:24px;border-bottom:3px solid #a78bfa;border-left:3px solid #a78bfa;border-radius:2px;"></div>
-            <div style="position:absolute;bottom:10px;right:10px;width:24px;height:24px;border-bottom:3px solid #a78bfa;border-right:3px solid #a78bfa;border-radius:2px;"></div>
-          </div>
-        </div>
-        <button onclick="stopInlineQRScan2()" class="btn btn-ghost" style="margin-top:8px;">■ 스캔 중지</button>
-      </div>
+      <!-- 위치별 카메라 + 완료 버튼 -->
+      <div id="m2LocList"></div>
 
       <!-- 완료 목록 -->
       <div style="margin-top:16px;">
@@ -344,29 +330,16 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div id="tabContent-qr" style="display:none;">
       <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span id="qrFloorInfo">오늘 점검 구역의 QR코드를 스캔해주세요.</span></div>
 
-      <!-- QR 스캐너 -->
-      <div class="qr-box" id="qrScanBox">
-        <div class="qr-icon">📷</div>
-        <div class="qr-title">QR 코드 스캔</div>
-        <div class="qr-sub">각 위치의 QR코드를 스캔하면<br>해당 위치가 자동으로 인증됩니다.</div>
-      </div>
-      <div id="qr-video-wrap" style="display:none;">
-        <video id="qr-video" autoplay muted playsinline></video>
-        <div class="qr-overlay">
-          <div class="qr-corner tl"></div>
-          <div class="qr-corner tr"></div>
-          <div class="qr-corner bl"></div>
-          <div class="qr-corner br"></div>
-        </div>
-      </div>
-      <button class="btn btn-qr" id="qrStartBtn" onclick="startQRScan()">📷 QR 스캔 시작</button>
-      <button class="btn btn-ghost" id="qrStopBtn" style="display:none;" onclick="stopQRScan()">■ 스캔 중지</button>
-
-      <!-- 스캔 결과 표시 -->
-      <div id="qrResultBox" style="display:none;margin-top:12px;background:rgba(34,197,94,0.1);border:1px solid var(--green);border-radius:10px;padding:14px;text-align:center;">
-        <div style="font-size:20px;margin-bottom:6px;">✅</div>
-        <div id="qrResultText" style="font-size:14px;font-weight:700;color:var(--green);"></div>
-      </div>
+      <!-- QR 스캐너 (html5-qrcode) -->
+      <div id="step3-qr-reader" style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:12px;"></div>
+      <button id="step3QrStartBtn" onclick="startStep3QRScan()"
+        style="width:100%;background:linear-gradient(135deg,#f5a623,#e8431a);border:none;border-radius:12px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:8px;">
+        📷 QR 스캔 시작
+      </button>
+      <button id="step3QrStopBtn" onclick="stopStep3QRScan()" style="display:none;"
+        class="btn btn-ghost">
+        ■ 스캔 중지
+      </button>
 
       <!-- 완료된 위치 목록 -->
       <div style="margin-top:16px;">
@@ -421,7 +394,6 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
 </div><!-- /main -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script>
 // ── 설정 ─────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyx1UNeXi_U__DUMApuSLANUODE1TORnX3C3PCQE9l0ND_-ZQiGV15fbROew68eyekU/exec';
@@ -653,28 +625,91 @@ function renderCommonList(){
 }
 
 function renderM2LocList(){
-  const el=document.getElementById('m2LocList');
+  const el = document.getElementById('m2LocList');
   if(!el) return;
-  const m2Locs=QR_LOCATIONS.filter(l=>l.floor==='중2층');
-  el.innerHTML=m2Locs.map(loc=>{
-    const isDone=state.qrFormDone.has(loc.id);
-    return `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border:1px solid ${isDone?'var(--green)':'var(--border)'};border-radius:10px;margin-bottom:8px;">
+  const m2Locs = QR_LOCATIONS.filter(l=>l.floor==='중2층');
+  el.innerHTML = '';
+
+  m2Locs.forEach(loc=>{
+    const isDone = state.qrFormDone.has(loc.id);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `background:var(--surface2);border:1px solid ${isDone?'var(--green)':'var(--border)'};border-radius:12px;padding:14px 16px;margin-bottom:12px;`;
+
+    // 헤더
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+    header.innerHTML = `
       <span style="font-size:22px;">${isDone?'✅':'📷'}</span>
       <div style="flex:1;">
-        <div style="font-size:14px;font-weight:600;color:${isDone?'var(--green)':'var(--text)'};">${loc.name}</div>
-        <div style="font-size:11px;color:${isDone?'var(--green)':'var(--text2)'};">${isDone?'구글폼 제출 완료':'QR 스캔 → 카메라 자동 실행'}</div>
+        <div style="font-size:15px;font-weight:700;color:${isDone?'var(--green)':'var(--text)'};">${loc.name}</div>
+        <div style="font-size:11px;color:${isDone?'var(--green)':'var(--text2)'};">${isDone?'구글폼 제출 완료':'QR 스캔 후 구글폼 작성'}</div>
       </div>
-      ${isDone
-        ? '<div style="font-size:12px;font-weight:700;color:var(--green);">완료</div>'
-        : `<button onclick="startInlineQRScan2('${loc.id}')"
-            style="background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">
-            📷 스캔
-          </button>`
-      }
-    </div>`;
-  }).join('');
+      ${isDone?'<span style="font-size:12px;font-weight:700;color:var(--green);">완료</span>':''}
+    `;
+    wrap.appendChild(header);
+
+    if(!isDone){
+      // Html5Qrcode reader div
+      const readerDiv = document.createElement('div');
+      readerDiv.id = 'reader-' + loc.id;
+      readerDiv.style.cssText = 'width:100%;border-radius:10px;overflow:hidden;margin-bottom:10px;display:none;';
+      wrap.appendChild(readerDiv);
+
+      // 버튼
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+
+      const startBtn = document.createElement('button');
+      startBtn.id = 'startBtn-' + loc.id;
+      startBtn.style.cssText = 'background:linear-gradient(135deg,#7c3aed,#3b82f6);border:none;border-radius:9px;padding:12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;';
+      startBtn.textContent = '📷 카메라 켜기';
+      startBtn.onclick = () => startLocScan(loc.id);
+      grid.appendChild(startBtn);
+
+      const stopBtn = document.createElement('button');
+      stopBtn.id = 'stopBtn-' + loc.id;
+      stopBtn.style.cssText = 'display:none;background:transparent;border:1px solid var(--border);border-radius:9px;padding:12px;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;';
+      stopBtn.textContent = '■ 중지';
+      stopBtn.onclick = () => stopLocScan(loc.id);
+      grid.appendChild(stopBtn);
+
+      const doneBtn = document.createElement('button');
+      doneBtn.style.cssText = 'background:rgba(34,197,94,0.15);border:1px solid var(--green);border-radius:9px;padding:12px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;grid-column:1/-1;margin-top:4px;';
+      doneBtn.textContent = '✅ 폼 제출 완료';
+      doneBtn.onclick = () => confirmFormDoneM2(loc.id);
+      grid.appendChild(doneBtn);
+
+      wrap.appendChild(grid);
+    }
+    el.appendChild(wrap);
+  });
   renderM2DoneList();
+}
+function onLocScanned(locId, scanned){
+  stopLocScan(locId);
+  // 구글폼 URL → 새 탭으로 열고 완료 버튼 안내
+  if(scanned.includes('docs.google.com/forms')){
+    window.open(scanned, '_blank');
+    // 폼 열렸음을 알리는 토스트
+    const toast=document.createElement('div');
+    toast.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:400;font-family:"Noto Sans KR",sans-serif;text-align:center;';
+    toast.innerHTML='구글폼이 열렸습니다!<br>작성 후 ✅ 폼 제출 완료를 눌러주세요.';
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(), 4000);
+    return;
+  }
+  // 일반 위치 QR
+  let lid=null;
+  try{ lid=new URL(scanned).searchParams.get('loc'); }catch(_){}
+  if(!lid) lid=scanned;
+  const found=QR_LOCATIONS.find(l=>l.id===lid);
+  if(found) completeQRAuth(found.id);
+  else alert('⚠️ 등록되지 않은 QR코드입니다.');
+}
+
+function confirmFormDoneM2(locId){
+  completeQRAuth(locId);
+  renderM2LocList();
 }
 
 function updateCommonProgress(){
@@ -781,76 +816,73 @@ function switchTab2(tab){
   if(tab!=='qr') stopInlineQRScan2();
   updateCommonProgress();
 }
-let inlineStream2 = null;
-let inlineFrame2 = null;
-let currentScanLocId = null;
+// ── 중2층 Html5Qrcode 스캐너 ────────────────────────────────────────
+const locScanners = {};
 
-async function startInlineQRScan2(locId){
-  currentScanLocId = locId;
-  const loc = QR_LOCATIONS.find(l=>l.id===locId);
-  const wrap = document.getElementById('m2CameraWrap');
-  const label = document.getElementById('m2CameraLabel');
-  if(wrap) wrap.style.display='block';
-  if(label && loc) label.textContent=`📷 ${loc.name} 스캔 중...`;
-  if(inlineStream2) inlineStream2.getTracks().forEach(t=>t.stop());
-  if(inlineFrame2) cancelAnimationFrame(inlineFrame2);
+async function startLocScan(locId){
+  if(typeof Html5Qrcode === 'undefined'){
+    alert('QR 스캐너가 로드되지 않았습니다. 인터넷 연결을 확인해주세요.');
+    return;
+  }
+  // 다른 스캐너 중지
+  for(const id in locScanners){
+    if(id !== locId) await stopLocScan(id);
+  }
+  const readerEl = document.getElementById('reader-'+locId);
+  const startBtn = document.getElementById('startBtn-'+locId);
+  const stopBtn  = document.getElementById('stopBtn-'+locId);
+  if(!readerEl) return;
+
+  readerEl.style.display = 'block';
+  if(startBtn) startBtn.style.display = 'none';
+  if(stopBtn)  stopBtn.style.display  = 'block';
+
   try{
-    inlineStream2 = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }
-    });
-    const video = document.getElementById('qr-video2');
-    video.srcObject = inlineStream2;
-    video.onloadeddata = () => { inlineFrame2 = requestAnimationFrame(scanInlineFrame2); };
-    await video.play().catch(()=>{});
+    locScanners[locId] = new Html5Qrcode('reader-'+locId);
+    await locScanners[locId].start(
+      {facingMode:'environment'},
+      {fps:10, qrbox:{width:220, height:220}},
+      (decodedText) => { onLocScanned(locId, decodedText); }
+    );
   }catch(e){
-    alert('카메라 권한이 필요합니다. 설정에서 카메라 권한을 허용해주세요.');
-    stopInlineQRScan2();
+    alert('카메라를 시작할 수 없습니다.\n브라우저 설정에서 카메라 권한을 허용해주세요.');
+    stopLocScan(locId);
   }
 }
 
-function stopInlineQRScan2(){
-  if(inlineStream2) inlineStream2.getTracks().forEach(t=>t.stop());
-  if(inlineFrame2) cancelAnimationFrame(inlineFrame2);
-  inlineStream2=null; inlineFrame2=null; currentScanLocId=null;
-  const wrap=document.getElementById('m2CameraWrap');
-  if(wrap) wrap.style.display='none';
+async function stopLocScan(locId){
+  if(locScanners[locId]){
+    try{ await locScanners[locId].stop(); locScanners[locId].clear(); }catch(_){}
+    delete locScanners[locId];
+  }
+  const readerEl = document.getElementById('reader-'+locId);
+  const startBtn = document.getElementById('startBtn-'+locId);
+  const stopBtn  = document.getElementById('stopBtn-'+locId);
+  if(readerEl) readerEl.style.display = 'none';
+  if(startBtn) startBtn.style.display = 'block';
+  if(stopBtn)  stopBtn.style.display  = 'none';
 }
 
-function scanInlineFrame2(){
-  const video=document.getElementById('qr-video2');
-  if(!video||!inlineStream2){ stopInlineQRScan2(); return; }
-  if(video.readyState===video.HAVE_ENOUGH_DATA && video.videoWidth>0){
-    const canvas=document.createElement('canvas');
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-    const ctx=canvas.getContext('2d');
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    try{
-      const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-      const code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'dontInvert'});
-      if(code){
-        stopInlineQRScan2();
-        const scanned=code.data.trim();
-        if(scanned.includes('docs.google.com/forms')){
-          const cleanUrl=scanned.split('?')[0];
-          const matched=QR_LOCATIONS.find(l=>l.formUrl&&l.formUrl.split('?')[0]===cleanUrl);
-          if(matched){ showFormModal(matched); return; }
-          window.open(scanned,'_blank');
-          if(currentScanLocId) showFormConfirm(currentScanLocId, scanned);
-          return;
-        }
-        let locId=null;
-        try{ locId=new URL(scanned).searchParams.get('loc'); }catch(_){}
-        if(!locId) locId=scanned;
-        const found=QR_LOCATIONS.find(l=>l.id===locId);
-        if(found) completeQRAuth(found.id);
-        else alert('⚠️ 등록되지 않은 QR코드입니다.');
-        return;
-      }
-    }catch(e){}
+function onLocScanned(locId, scanned){
+  stopLocScan(locId);
+  if(scanned.includes('docs.google.com/forms')){
+    const cleanUrl = scanned.split('?')[0];
+    const matched = QR_LOCATIONS.find(l=>l.formUrl && l.formUrl.split('?')[0]===cleanUrl);
+    if(matched){ showFormModal(matched); return; }
+    window.location.href = scanned;
+    return;
   }
-  inlineFrame2=requestAnimationFrame(scanInlineFrame2);
+  let lid = null;
+  try{ lid = new URL(scanned).searchParams.get('loc'); }catch(_){}
+  if(!lid) lid = scanned;
+  const found = QR_LOCATIONS.find(l=>l.id===lid);
+  if(found) completeQRAuth(found.id);
+  else alert('⚠️ 등록되지 않은 QR코드입니다.');
 }
+
+function stopInlineQRScan2(){ for(const id in locScanners) stopLocScan(id); }
+function startInlineQRScan2(locId){ startLocScan(locId); }
+function confirmFormDoneM2(locId){ completeQRAuth(locId); renderM2LocList(); }
 
 function showFormConfirm(locId, formUrl){
   const loc=QR_LOCATIONS.find(l=>l.id===locId);
@@ -982,31 +1014,99 @@ function closeInlineQRScan(){
   if(modal) modal.remove();
 }
 
-// ── QR 스캔 (STEP 3 탭용) ────────────────────────────────────────────
-async function startQRScan(){
+// ── QR 스캔 (html5-qrcode 방식) ─────────────────────────────────────
+let html5QrStep3 = null;
+let html5QrM2    = null;
+
+// STEP 3 QR 스캔
+async function startStep3QRScan(){
+  if(html5QrStep3) return;
+  document.getElementById('step3QrStartBtn').style.display='none';
+  document.getElementById('step3QrStopBtn').style.display='block';
+  html5QrStep3 = new Html5Qrcode('step3-qr-reader');
   try{
-    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    const video=document.getElementById('qr-video');
-    video.srcObject=qrStream;
-    document.getElementById('qr-video-wrap').style.display='block';
-    document.getElementById('qrScanBox').style.display='none';
-    document.getElementById('qrStartBtn').style.display='none';
-    document.getElementById('qrStopBtn').style.display='block';
-    video.addEventListener('loadeddata',()=>{ qrAnimFrame=requestAnimationFrame(scanFrame); });
+    await html5QrStep3.start(
+      {facingMode:'environment'},
+      {fps:10, qrbox:{width:250,height:250}},
+      (decodedText) => { onStep3QRScanned(decodedText); }
+    );
   }catch(e){
-    alert('카메라 접근 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요.');
+    alert('카메라 권한이 필요합니다. 설정에서 카메라를 허용해주세요.');
+    stopStep3QRScan();
   }
 }
 
-function stopQRScan(){
-  if(qrStream) qrStream.getTracks().forEach(t=>t.stop());
-  if(qrAnimFrame) cancelAnimationFrame(qrAnimFrame);
-  qrStream=null; qrAnimFrame=null;
-  document.getElementById('qr-video-wrap').style.display='none';
-  document.getElementById('qrScanBox').style.display='block';
-  document.getElementById('qrStartBtn').style.display='block';
-  document.getElementById('qrStopBtn').style.display='none';
+async function stopStep3QRScan(){
+  if(html5QrStep3){
+    try{ await html5QrStep3.stop(); html5QrStep3.clear(); }catch(_){}
+    html5QrStep3=null;
+  }
+  document.getElementById('step3QrStartBtn').style.display='block';
+  document.getElementById('step3QrStopBtn').style.display='none';
 }
+
+function onStep3QRScanned(scanned){
+  stopStep3QRScan();
+  let locId=null;
+  try{ locId=new URL(scanned).searchParams.get('loc'); }catch(_){}
+  if(!locId) locId=scanned;
+  const loc=QR_LOCATIONS.find(l=>l.id===locId);
+  if(!loc){ alert('⚠️ 등록되지 않은 QR코드입니다.'); return; }
+  if(state.todayFloor && loc.floor!==state.todayFloor){
+    const go=confirm(`⚠️ 오늘 점검 구역(${state.todayFloor})이 아닌\n${loc.floor} 위치입니다.\n그래도 진행하시겠습니까?`);
+    if(!go) return;
+  }
+  if(loc.formUrl) showFormModal(loc);
+  else completeQRAuth(loc.id);
+}
+
+// 중2층 QR 스캔
+async function startM2QRScan(){
+  if(html5QrM2) return;
+  document.getElementById('m2QrStartBtn').style.display='none';
+  document.getElementById('m2QrStopBtn').style.display='block';
+  html5QrM2 = new Html5Qrcode('m2-qr-reader');
+  try{
+    await html5QrM2.start(
+      {facingMode:'environment'},
+      {fps:10, qrbox:{width:250,height:250}},
+      (decodedText) => { onM2QRScanned(decodedText); }
+    );
+  }catch(e){
+    alert('카메라 권한이 필요합니다. 설정에서 카메라를 허용해주세요.');
+    stopM2QRScan();
+  }
+}
+
+async function stopM2QRScan(){
+  if(html5QrM2){
+    try{ await html5QrM2.stop(); html5QrM2.clear(); }catch(_){}
+    html5QrM2=null;
+  }
+  document.getElementById('m2QrStartBtn').style.display='block';
+  document.getElementById('m2QrStopBtn').style.display='none';
+}
+
+function onM2QRScanned(scanned){
+  stopM2QRScan();
+  // 구글폼 URL 인식
+  if(scanned.includes('docs.google.com/forms')){
+    const cleanUrl=scanned.split('?')[0];
+    const matched=QR_LOCATIONS.find(l=>l.formUrl&&l.formUrl.split('?')[0]===cleanUrl);
+    if(matched){ showFormModal(matched); return; }
+    window.open(scanned,'_blank');
+    return;
+  }
+  let locId=null;
+  try{ locId=new URL(scanned).searchParams.get('loc'); }catch(_){}
+  if(!locId) locId=scanned;
+  const found=QR_LOCATIONS.find(l=>l.id===locId);
+  if(found) completeQRAuth(found.id);
+  else alert('⚠️ 등록되지 않은 QR코드입니다.');
+}
+
+// 탭 전환 시 스캔 중지
+function stopQRScan(){ stopStep3QRScan(); }
 
 function scanFrame(){
   const video=document.getElementById('qr-video');
@@ -1330,5 +1430,7 @@ function scheduleReminders(){
 }
 window.addEventListener('load',initPWA);
 </script>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </body>
 </html>
