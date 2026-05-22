@@ -1313,7 +1313,7 @@ async function submitResult(){
 
   const overlay=document.getElementById('overlay');
   overlay.classList.add('show');
-  document.getElementById('overlayText').textContent='구글 시트 저장 및 이메일 발송 중...';
+  document.getElementById('overlayText').textContent='제출 완료!';
 
   const okC=allItems.filter(i=>state.checks[i.id]==='ok').length;
   const partC=allItems.filter(i=>state.checks[i.id]==='partial').length;
@@ -1357,16 +1357,13 @@ ${state.memo||'없음'}`.trim();
     emailBody:emailBody,
   };
 
-  try{
-    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    overlay.classList.remove('show');
-    state.submitted=true; stopReminder();
-    showResult(okC,partC,ngC,naC,emails,true);
-  }catch(err){
-    overlay.classList.remove('show');
-    state.submitted=true; stopReminder();
-    showResult(okC,partC,ngC,naC,emails,false);
-  }
+  // 요청만 보내고 기다리지 않음 (no-cors라 응답 못 받음)
+  fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .catch(()=>{}); // 에러 무시
+
+  overlay.classList.remove('show');
+  state.submitted=true; stopReminder();
+  showResult(okC,partC,ngC,naC,emails,true);
 }
 
 function showResult(okC,partC,ngC,naC,emails,success){
