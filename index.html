@@ -274,16 +274,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
     <!-- 중2층 QR 탭 -->
     <div id="tab2Content-qr" style="display:none;">
-      <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span>중2층 각 위치의 QR코드를 스캔하고 구글폼을 작성해주세요.</span></div>
+      <div class="info-box" style="margin-bottom:12px;"><span>📍</span><span>각 위치의 📷 카메라 켜기 버튼을 눌러 QR을 스캔하세요.</span></div>
       <div id="m2LocList"></div>
-
-    <!-- 중2층 QR 탭 -->
-    <div id="tab2Content-qr" style="display:none;">
-
-      <!-- 위치별 카메라 + 완료 버튼 -->
-      <div id="m2LocList"></div>
-
-      <!-- 완료 목록 -->
       <div style="margin-top:16px;">
         <div class="sec-title">인증 완료 위치</div>
         <div class="qr-badge-list" id="m2DoneList">
@@ -603,7 +595,7 @@ function goStep(n){
   updateStepDots(n);
   window.scrollTo(0,0);
   if(n===2) renderCommonList();
-  if(n===3) renderTurnList();
+  if(n===3){ try{ renderTurnList(); }catch(e){ console.error('renderTurnList 오류:',e); } }
   if(n===4) renderSummary();
   if(n===2||n===3) startReminder();
   if(n===4||n===5) stopReminder();
@@ -796,17 +788,19 @@ function updateStep3Progress(){
   const items=TURN_ITEMS[state.turn]||[];
   const done=items.filter(i=>state.checks[i.id]).length;
   const total=items.length;
-  document.getElementById('prog3Text').textContent=`${done} / ${total} 항목 완료`;
-  document.getElementById('prog3Bar').style.width=total>0?(done/total*100)+'%':'0%';
+  const progText=document.getElementById('prog3Text');
+  const progBar=document.getElementById('prog3Bar');
+  if(progText) progText.textContent=`${done} / ${total} 항목 완료`;
+  if(progBar) progBar.style.width=total>0?(done/total*100)+'%':'0%';
   checkStep3Ready();
 }
 
 function checkStep3Ready(){
   const items=TURN_ITEMS[state.turn]||[];
   const turnDone=items.every(i=>state.checks[i.id]);
-  // QR은 1곳 이상 인증하면 통과
   const qrDone=state.qrDone.size>0;
-  document.getElementById('step3Next').disabled=!(turnDone&&qrDone);
+  const btn=document.getElementById('step3Next');
+  if(btn) btn.disabled=!(turnDone&&qrDone);
 }
 
 // ── STEP 2 탭 전환 ───────────────────────────────────────────────────
