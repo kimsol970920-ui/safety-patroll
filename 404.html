@@ -235,9 +235,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div class="card-label">STEP 02 / 06</div>
     <div class="card-title">근무 교대 선택</div>
     <div class="opt-grid c3" id="turnGrid">
-      <div class="opt-btn" onclick="selectTurn('전')">오전</div>
-      <div class="opt-btn" onclick="selectTurn('후')">오후</div>
-      <div class="opt-btn" onclick="selectTurn('야')">야간</div>
+      <div class="opt-btn" onclick="selectTurn('오전')">오전</div>
+      <div class="opt-btn" onclick="selectTurn('오후')">오후</div>
+      <div class="opt-btn" onclick="selectTurn('야간')">야간</div>
     </div>
     <div id="floorGuide" style="display:none;margin-top:10px;">
       <div class="info-box"><span>📋</span><span id="floorGuideText"></span></div>
@@ -706,8 +706,8 @@ function selectShift(s){
 function selectTurn(t){
   state.turn=t;
   state.todayFloor=getTodayFloor(t);
-  document.querySelectorAll('#turnGrid .opt-btn').forEach((el,i)=>el.classList.toggle('selected',['전','후','야'][i]===t));
-  const tLabel={'전':'오전','후':'오후','야':'야간'}[t];
+  document.querySelectorAll('#turnGrid .opt-btn').forEach((el,i)=>el.classList.toggle('selected',['오전','오후','야간'][i]===t));
+  const tLabel = t;
   document.getElementById('floorGuide').style.display='block';
   document.getElementById('floorGuideText').textContent=`오늘 ${tLabel} 점검 구역: ${state.todayFloor}`;
   document.getElementById('step1Next').disabled=false;
@@ -1009,7 +1009,7 @@ function toggleInactive(id){
 
 // ── 교대별 체크리스트 렌더링 ─────────────────────────────────────────
 function renderTurnList(){
-  const tLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||'';
+  const tLabel = state.turn || '';
   const titleEl = document.getElementById('step3Title');
   if(titleEl) titleEl.textContent=`${tLabel} 점검 + QR 인증`;
 
@@ -1059,7 +1059,7 @@ function makeItem(item, type){
   const div=document.createElement('div');
   div.className='check-item';
   const tagClass=type==='common'?'tag-common':type==='qr'?'tag-qr':'tag-turn';
-  const tagLabel=type==='common'?'공통':type==='qr'?'위치':state.turn==='전'?'오전':state.turn==='후'?'오후':'야간';
+  const tagLabel=type==='common'?'공통':type==='qr'?'위치':state.turn;
   const cur=state.checks[item.id]||'';
   div.innerHTML=`
     <div class="check-item-text"><span class="tag ${tagClass}">${tagLabel}</span>${item.text}</div>
@@ -1597,7 +1597,7 @@ function renderSummary(){
   const pad = n=>String(n).padStart(2,'0');
   state.timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   state.timestampDate = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  const tLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
+  const tLabel = state.turn || '';
 
   const allItems=[...COMMON_ITEMS,...(TURN_ITEMS[state.turn]||[])];
   const okC=allItems.filter(i=>state.checks[i.id]==='ok').length;
@@ -1668,7 +1668,7 @@ async function submitResult(){
   const partC=allItems.filter(i=>state.checks[i.id]==='partial').length;
   const ngC=allItems.filter(i=>state.checks[i.id]==='ng').length;
   const naC=allItems.filter(i=>state.checks[i.id]==='na').length;
-  const tLabel={'전':'오전','후':'오후','야':'야간'}[state.turn]||state.turn;
+  const tLabel = state.turn || '';
   const qrList=[...state.qrDone].map(id=>{const l=QR_LOCATIONS.find(x=>x.id===id);return l?`${l.floor}-${l.name}`:id;}).join(' / ');
   const ngDetail=ngItems.map((item,i)=>{
     const sym=state.checks[item.id]==='ng'?'X':'△';
